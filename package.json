@@ -30,8 +30,8 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@typescript/native": "npm:typescript@7.0.2",
     "husky": "^9.1.7",
-    "oxlint": "1.87.0",
-    "oxlint-tsgolint": "7.0.2003",
+    "oxlint": "1.89.0",
+    "oxlint-tsgolint": "7.0.2005",
     "prettier": "^3.8.2",
     "turbo": "^2.3.3",
     "typescript": "npm:@typescript/typescript6@6.0.2"
