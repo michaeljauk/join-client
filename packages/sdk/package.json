@@ -1,0 +1,60 @@
+{
+  "name": "join-sdk",
+  "version": "0.0.0",
+  "description": "Community TypeScript SDK for the JOIN recruiting API",
+  "keywords": [
+    "join",
+    "join.com",
+    "recruiting",
+    "ats",
+    "sdk",
+    "openapi",
+    "client"
+  ],
+  "license": "MIT",
+  "author": "Michael Jauk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michaeljauk/join-client.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/michaeljauk/join-client/tree/main/packages/sdk",
+  "bugs": "https://github.com/michaeljauk/join-client/issues",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "generate": "openapi-typescript ../../openapi.json -o src/generated.ts",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "openapi-typescript": "^7.4.4",
+    "tsup": "^8.3.5",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "vitest": "^2.1.8",
+    "@typescript/native": "npm:typescript@7.0.2"
+  }
+}
