@@ -1,0 +1,55 @@
+{
+  "name": "join-com-cli",
+  "version": "0.0.0",
+  "description": "Command-line interface for the JOIN recruiting API",
+  "keywords": [
+    "join",
+    "join.com",
+    "recruiting",
+    "ats",
+    "cli"
+  ],
+  "license": "MIT",
+  "author": "Michael Jauk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michaeljauk/join-client.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/michaeljauk/join-client/tree/main/packages/cli",
+  "bugs": "https://github.com/michaeljauk/join-client/issues",
+  "type": "module",
+  "bin": {
+    "join-com": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "generate": "node scripts/generate-commands.mjs && node scripts/generate-schema.mjs",
+    "test": "vitest run --passWithNoTests",
+    "postinstall": "node scripts/postinstall.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "citty": "^0.2.2",
+    "consola": "^3.2.3",
+    "join-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsup": "^8.3.5",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "vitest": "^2.1.8",
+    "@typescript/native": "npm:typescript@7.0.2"
+  }
+}
