@@ -1,0 +1,10 @@
+dist
+node_modules
+.turbo
+pnpm-lock.yaml
+openapi.json
+packages/sdk/src/generated.ts
+packages/cli/src/commands/generated
+packages/cli/skills/join/SCHEMA.md
+packages/mcp/src/spec.json
+CHANGELOG.md

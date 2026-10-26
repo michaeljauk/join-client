@@ -1,0 +1,11 @@
+name: Spec bump
+description: The JOIN API docs changed and this repo should regenerate from them
+labels: ["spec"]
+body:
+  - type: textarea
+    id: changes
+    attributes:
+      label: Known changes
+      description: Link the upstream changelog entry (https://docs.join.com/changelog) or paste the diff from `pnpm spec:fetch`.
+    validations:
+      required: true

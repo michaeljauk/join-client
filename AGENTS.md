@@ -1,0 +1,93 @@
+# AGENTS.md
+
+Guidance for coding agents and contributors working in this repo.
+
+## What this repo is
+
+A community TypeScript client for the [JOIN](https://join.com) recruiting API, generated from the
+OpenAPI documents on [docs.join.com](https://docs.join.com). Three published packages:
+
+| Package        | Path           | Purpose                                                   |
+| -------------- | -------------- | --------------------------------------------------------- |
+| `join-sdk`     | `packages/sdk` | Typed `openapi-fetch` client, rate-limit retry, paging    |
+| `join-com-cli` | `packages/cli` | `join-com` binary, one command per endpoint, Claude skill |
+| `join-mcp`     | `packages/mcp` | MCP server in Code Mode (`search` + `execute`)            |
+
+This is not an official JOIN product.
+
+## Setup
+
+```bash
+pnpm install
+pnpm generate     # openapi.json -> SDK types, CLI commands, SCHEMA.md, MCP spec
+pnpm typecheck    # TypeScript 7 tsc
+pnpm lint         # oxlint with type-aware rules
+pnpm build
+pnpm test
+```
+
+Node 20 or later. `.nvmrc` pins 22.
+
+## Core conventions
+
+- pnpm and Turborepo. ESM only. Build with tsup.
+- Conventional Commits, enforced by commitlint. **One package per commit**, scoped `sdk:`, `cli:`,
+  `mcp:`. Release Please routes changelog entries by file path, not by scope.
+- Never edit generated files: `packages/sdk/src/generated.ts`, `packages/cli/src/commands/generated/`,
+  `packages/cli/skills/join/SCHEMA.md`, `packages/mcp/src/spec.json`.
+- Toolchain: oxlint plus `oxlint-tsgolint`, Prettier, TypeScript 7 `tsc` for the typecheck. The
+  `typescript` package stays on TS 6 (`@typescript/typescript6`) because tsup needs the compiler API
+  for declaration files. Drop the alias when TS 7.1 ships an API.
+
+## Spec workflow
+
+JOIN publishes no single spec file. Each reference page on docs.join.com embeds an OpenAPI document
+with one operation. `pnpm spec:fetch` reads the page index (`llms.txt`), merges all documents into
+`openapi.json`, and fails on any conflict between two pages.
+
+After a spec change:
+
+1. `pnpm spec:fetch` and review the `openapi.json` diff.
+2. `pnpm generate && pnpm typecheck && pnpm test`.
+3. Commit the spec bump on its own.
+
+## CLI commands are generated
+
+`packages/cli/scripts/endpoints.mjs` maps each operation to a resource and a command name. Path
+segments and parameters become kebab-case (`/employmentTypes` -> `employment-types`,
+`createdAtGte` -> `--created-at-gte`). Action endpoints such as `PATCH /jobs/{id}/archive` have an
+explicit entry in `OVERRIDES`.
+
+Generated behavior:
+
+- `GET` endpoints with a `page` parameter get `--all`, which walks `x-page-count`.
+- Endpoints with a binary response (attachments) write to `--output`.
+- Mutating endpoints read the body from `--data`, `--data @file.json`, `--data -`, or stdin.
+
+Hand-written commands: `auth` (token profiles) and `download` (attachment by full URL).
+
+## Claude Code skill
+
+`packages/cli/skills/join/SKILL.md` is hand-written. `SCHEMA.md` next to it is generated. A global
+install of `join-com-cli` copies both to `~/.claude/skills/join/`.
+
+## Testing
+
+Vitest. SDK tests mock `fetch` and cover auth, errors, 429 retry and paging. MCP tests cover path
+normalization. Never call the live API from tests.
+
+## Release
+
+Release Please with linked versions. Merge the "Version Packages" PR, and the release workflow
+publishes all three packages to npm through OIDC trusted publishing with provenance. No npm token.
+
+## Scope discipline
+
+Keep the SDK generic and small: one runtime dependency (`openapi-fetch`). No workflows that combine
+JOIN with another system. Those belong in the consumer.
+
+## Things to avoid
+
+- Do not log tokens or candidate data. Redact both in issues and test fixtures.
+- Do not commit real candidate data, attachment URLs or `sig` values.
+- Do not add write operations to examples without a warning. Writes take effect at once.

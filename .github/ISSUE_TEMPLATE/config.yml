@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: JOIN API docs
+    url: https://docs.join.com
+    about: For questions about the JOIN API itself (endpoints, field semantics, auth), check the upstream docs first.
+  - name: Security vulnerability
+    url: https://github.com/michaeljauk/join-client/security/advisories/new
+    about: Please report security issues privately via GitHub security advisories, not as a public issue.

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "generate"],
+      "outputs": ["dist/**"]
+    },
+    "generate": {
+      "inputs": ["../../openapi.json", "scripts/**"],
+      "outputs": [
+        "src/generated.ts",
+        "src/commands/generated/**",
+        "src/spec.json"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "generate"]
+    }
+  }
+}

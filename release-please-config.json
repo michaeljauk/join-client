@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "include-component-in-tag": true,
+  "separate-pull-requests": false,
+  "plugins": [
+    {
+      "type": "linked-versions",
+      "groupName": "join-client",
+      "components": ["join-sdk", "join-com-cli", "join-mcp"]
+    }
+  ],
+  "packages": {
+    "packages/sdk": {
+      "package-name": "join-sdk",
+      "component": "join-sdk",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "packages/cli": {
+      "package-name": "join-com-cli",
+      "component": "join-com-cli",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "packages/mcp": {
+      "package-name": "join-mcp",
+      "component": "join-mcp",
+      "changelog-path": "CHANGELOG.md"
+    }
+  }
+}

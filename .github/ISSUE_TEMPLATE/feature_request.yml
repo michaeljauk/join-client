@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose a new SDK helper, CLI command, or workflow
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that is currently awkward or impossible?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the API, flag, or behavior you have in mind. Code sketches welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      description: See AGENTS.md → "Scope discipline". This repo stays a generic SDK + CLI + MCP server for the JOIN API.
+      options:
+        - label: This is a generic capability, not a workflow that combines JOIN with another system.
+          required: true

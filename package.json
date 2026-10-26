@@ -1,0 +1,39 @@
+{
+  "name": "join-client-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Community TypeScript SDK, CLI and MCP server for the JOIN recruiting API",
+  "license": "MIT",
+  "author": "Michael Jauk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michaeljauk/join-client.git"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "lint": "oxlint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "turbo run typecheck",
+    "generate": "turbo run generate",
+    "spec:fetch": "node scripts/fetch-spec.mjs"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "husky": "^9.1.7",
+    "oxlint": "1.87.0",
+    "oxlint-tsgolint": "7.0.2003",
+    "prettier": "^3.8.2",
+    "turbo": "^2.3.3",
+    "typescript": "npm:@typescript/typescript6@6.0.2"
+  }
+}
