@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/config-conventional": "^21.2.4",
     "@typescript/native": "npm:typescript@7.0.2",
     "husky": "^9.1.7",
     "oxlint": "1.87.0",
