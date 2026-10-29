@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
   collectPages,
@@ -140,6 +141,15 @@ describe("createJoinClient", () => {
       body: { content: "hello" },
     });
     expect(bodies).toEqual(['{"content":"hello"}', '{"content":"hello"}']);
+  });
+});
+
+describe("DEFAULT_API_VERSION", () => {
+  it("matches the revision of openapi.json", () => {
+    const spec = JSON.parse(
+      readFileSync(new URL("../../../openapi.json", import.meta.url), "utf8"),
+    ) as { info: { version: string } };
+    expect(DEFAULT_API_VERSION).toBe(spec.info.version);
   });
 });
 
