@@ -2,8 +2,9 @@
 // Rebuilds openapi.json from docs.join.com. JOIN publishes no single spec
 // file: every reference page embeds an OpenAPI document with one operation.
 // This script reads the page index from llms.txt, extracts each embedded
-// document and merges paths and components. It fails on any conflict
-// between two pages, so a silent overwrite cannot happen.
+// document and merges paths and components. Guide pages carry no document
+// and are skipped. It fails on any conflict between two pages, so a silent
+// overwrite cannot happen.
 import { writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,11 +24,15 @@ if (pageUrls.length === 0)
 
 let merged = null;
 const conflicts = [];
+const guides = [];
 for (const url of pageUrls) {
   const page = await fetchText(url);
   const match = page.match(/```json\n([\s\S]*?)\n```/);
-  if (!match) throw new Error(`no embedded OpenAPI document in ${url}`);
-  const doc = JSON.parse(match[1]);
+  const doc = match ? JSON.parse(match[1]) : null;
+  if (!doc?.openapi) {
+    guides.push(url);
+    continue;
+  }
   if (!merged) {
     const { paths: _p, components: _c, ...rest } = doc;
     merged = { ...rest, paths: {}, components: {} };
@@ -50,6 +55,7 @@ for (const url of pageUrls) {
   }
 }
 
+if (!merged) throw new Error(`no OpenAPI documents in ${INDEX_URL}`);
 if (conflicts.length) {
   throw new Error(`conflicting definitions:\n  ${conflicts.join("\n  ")}`);
 }
@@ -64,7 +70,7 @@ const ops = Object.values(merged.paths).reduce(
   0,
 );
 console.log(
-  `wrote ${outPath}: ${pageUrls.length} pages, ${Object.keys(merged.paths).length} paths, ${ops} operations`,
+  `wrote ${outPath}: ${pageUrls.length - guides.length} reference pages (${guides.length} guides skipped), ${Object.keys(merged.paths).length} paths, ${ops} operations`,
 );
 
 async function fetchText(url) {
