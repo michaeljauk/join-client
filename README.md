@@ -12,14 +12,15 @@ product.
 
 ## Quick start
 
-Get a token at <https://join.com/user/api-credentials>. A token belongs to one JOIN company.
+Create a company API token in JOIN under Company Settings → Developer → API tokens. A token belongs
+to one JOIN company.
 
 ```bash
 npm install -g join-com-cli
 join-com auth login --profile acme        # paste the token, or pipe it in
 join-com jobs list
 join-com applications list --job-id 123 --all | jq 'length'
-join-com download "<attachments[].url from an application>" -o cv.pdf
+join-com download "<documents[].url from an application>" -o cv.pdf
 ```
 
 SDK:
@@ -28,12 +29,12 @@ SDK:
 import { collectPages, createJoinClient } from "join-sdk";
 
 const join = createJoinClient({ token: process.env.JOIN_TOKEN! });
-const { data: jobs } = await join.GET("/jobs", {
-  params: { query: { status: "ONLINE" } },
+const { data: page } = await join.GET("/jobs", {
+  params: { query: { status: ["ONLINE"] } },
 });
-const applications = await collectPages((page) =>
+const applications = await collectPages((cursor) =>
   join.GET("/applications", {
-    params: { query: { jobId: 123, page, pageSize: 50 } },
+    params: { query: { jobId: 123, cursor, limit: 50 } },
   }),
 );
 ```
@@ -46,11 +47,12 @@ claude mcp add join -e JOIN_PROFILE=acme -- npx -y join-mcp
 
 ## Coverage
 
-All 30 operations of JOIN API v2: jobs, applications, candidates, candidate notes, scorecards,
-tags, offices, categories, employment types, seniority levels and attachment downloads.
+All 25 operations of JOIN API v3 (revision `2026-11-01`): jobs, applications and stage moves,
+candidates, candidate notes, scorecards, locations, contract types, employment types, pipeline
+templates and remote regions. Application documents download from pre-signed URLs.
 
-The JOIN API has no endpoint to move an application between pipeline stages, to reject it, or to
-send email. Use the JOIN web app for those.
+JOIN API v2 is not supported from 1.0 on. The JOIN API has no endpoint to reject an application,
+update a candidate profile or send email. Use the JOIN web app for those.
 
 ## Development
 

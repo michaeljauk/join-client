@@ -42,8 +42,12 @@ Node 20 or later. `.nvmrc` pins 22.
 ## Spec workflow
 
 JOIN publishes no single spec file. Each reference page on docs.join.com embeds an OpenAPI document
-with one operation. `pnpm spec:fetch` reads the page index (`llms.txt`), merges all documents into
-`openapi.json`, and fails on any conflict between two pages.
+with one operation. `pnpm spec:fetch` reads the page index (`llms.txt`), skips guide pages without
+a document, merges all documents into `openapi.json`, and fails on any conflict between two pages.
+
+The client targets API v3. The URL selects the major version; the `Join-Version` header selects a
+dated revision. `DEFAULT_API_VERSION` in `packages/sdk/src/client.ts` must match `info.version` in
+`openapi.json`. Bump both together.
 
 After a spec change:
 
@@ -55,16 +59,18 @@ After a spec change:
 
 `packages/cli/scripts/endpoints.mjs` maps each operation to a resource and a command name. Path
 segments and parameters become kebab-case (`/employmentTypes` -> `employment-types`,
-`createdAtGte` -> `--created-at-gte`). Action endpoints such as `PATCH /jobs/{id}/archive` have an
+`createdAtGte` -> `--created-at-gte`). Action endpoints such as `PUT /applications/{id}/stage` have an
 explicit entry in `OVERRIDES`.
 
 Generated behavior:
 
-- `GET` endpoints with a `page` parameter get `--all`, which walks `x-page-count`.
-- Endpoints with a binary response (attachments) write to `--output`.
+- `GET` endpoints with a `cursor` parameter get `--all`, which follows `nextCursor`.
+- Header parameters such as `Accept-Language` become flags. `Join-Version` is set by the SDK.
+- Endpoints with a binary response write to `--output`. v3 has none.
 - Mutating endpoints read the body from `--data`, `--data @file.json`, `--data -`, or stdin.
 
-Hand-written commands: `auth` (token profiles) and `download` (attachment by full URL).
+Hand-written commands: `auth` (token profiles) and `download` (application document by its
+pre-signed URL, fetched without the JOIN token).
 
 ## Claude Code skill
 

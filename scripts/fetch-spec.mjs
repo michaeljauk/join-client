@@ -65,8 +65,9 @@ for (const section of Object.keys(merged.components)) {
   merged.components[section] = sortKeys(merged.components[section]);
 }
 writeFileSync(outPath, JSON.stringify(merged, null, 2) + "\n", "utf8");
+const METHODS = new Set(["get", "post", "put", "patch", "delete"]);
 const ops = Object.values(merged.paths).reduce(
-  (n, ops) => n + Object.keys(ops).length,
+  (n, item) => n + Object.keys(item).filter((k) => METHODS.has(k)).length,
   0,
 );
 console.log(
