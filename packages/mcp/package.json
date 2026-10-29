@@ -39,7 +39,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cloudflare/codemode": "0.3.4",
+    "@cfworker/json-schema": "^4.1.1",
+    "@cloudflare/codemode": "0.5.5",
     "@modelcontextprotocol/sdk": "^1.25.0",
     "join-sdk": "workspace:*",
     "zod": "^4.0.0"
