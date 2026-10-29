@@ -32,16 +32,19 @@ claude mcp add join -e JOIN_PROFILE=acme -- npx -y join-mcp
 
 | Variable        | Meaning                                   |
 | --------------- | ----------------------------------------- |
-| `JOIN_TOKEN`    | API token. Wins over stored profiles.     |
+| `JOIN_TOKEN`    | Company API token. Wins over profiles.    |
 | `JOIN_PROFILE`  | Stored profile from `join-com auth login` |
 | `JOIN_BASE_URL` | API base URL override                     |
 
 ## Behavior
 
-- List endpoints return at most `pageSize` (max 50) items. Loop `page` until a page is short.
-- `path` accepts a full attachment URL from `application.attachments[].url`. The server saves the
-  file under `<os tmpdir>/join-mcp/` (mode 600) and returns `{ savedTo, contentType, bytes }`.
-  These files contain personal data. Delete them when you are done.
+- Targets JOIN API v3, revision `2026-11-01`. Responses wrap the payload under `data`.
+- List endpoints return `{ data, nextCursor }` with at most `limit` (max 50) records. Pass
+  `nextCursor` as `cursor` until it is `null`.
+- A GET with a document URL from `application.documents[].url` as `path` downloads the file. The
+  URL is pre-signed external storage, so the server fetches it without the JOIN token. It saves the
+  file under `<os tmpdir>/join-mcp/` (mode 600) and returns `{ savedTo, contentType, bytes }`. The
+  links expire after one hour. These files contain personal data. Delete them when you are done.
 - The server exposes every operation, including writes. Writes take effect immediately.
 
 ## Security
