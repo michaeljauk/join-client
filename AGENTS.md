@@ -26,7 +26,8 @@ pnpm build
 pnpm test
 ```
 
-Node 20 or later. `.nvmrc` pins 22.
+Development needs Node 22.12 or later (commitlint 21); `.nvmrc` pins 22. The published packages
+support Node 20 or later.
 
 ## Core conventions
 
