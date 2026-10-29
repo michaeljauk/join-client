@@ -6,6 +6,7 @@ The command is not called `join` because macOS and Linux already ship a `join` u
 
 ```bash
 npm install -g join-com-cli
+join-com skill install   # optional: Claude Code skill, see below
 ```
 
 ## Authentication
@@ -59,8 +60,19 @@ Command names follow the API paths:
 
 ## Claude Code skill
 
-A global install copies `skills/join/SKILL.md` and the generated `SCHEMA.md` to
-`~/.claude/skills/join/`.
+The package contains a Claude Code skill: the hand-written `skills/join/SKILL.md` and the generated
+`SCHEMA.md`. Install it with:
+
+```sh
+join-com skill install
+```
+
+The command copies both files to `$CLAUDE_CONFIG_DIR/skills/join/`, default `~/.claude/skills/join/`.
+Run it again after an update. `--dir <path>` picks another target. If the target is a symlink, for
+example to a checkout of this repo, the command copies nothing.
+
+A global install also runs a postinstall script that copies the skill. npm 11.19 and later and pnpm
+skip install scripts by default, so do not rely on it.
 
 ## Exit codes
 
