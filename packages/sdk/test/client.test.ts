@@ -107,6 +107,35 @@ describe("createJoinClient", () => {
     }
   });
 
+  it("uses the burst reset when the burst window is exhausted", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-11-01T00:00:00Z"));
+      const now = Date.now() / 1_000;
+      let calls = 0;
+      const fetch = vi.fn(async () => {
+        calls++;
+        return calls === 1
+          ? new Response("", {
+              status: 429,
+              headers: {
+                "x-ratelimit-reset": String(now + 50),
+                "x-ratelimit-burst-remaining": "0",
+                "x-ratelimit-burst-reset": String(now + 2),
+              },
+            })
+          : json({ data: [], nextCursor: null });
+      });
+      const join = createJoinClient({ token: "tok", fetch });
+      const pending = join.GET("/jobs");
+      await vi.advanceTimersByTimeAsync(2_200);
+      await pending;
+      expect(fetch).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("gives up after maxRateLimitRetries", async () => {
     const fetch = vi.fn(
       async () =>
@@ -172,11 +201,16 @@ describe("collectPages", () => {
     ]);
   });
 
-  it("stops when a cursor repeats", async () => {
+  it("throws when a cursor repeats", async () => {
     const fetchPage = vi.fn(async () => ({
       data: { data: [1], nextCursor: "same" },
     }));
-    expect(await collectPages(fetchPage)).toEqual([1, 1]);
+    await expect(collectPages(fetchPage)).rejects.toThrow(/cursor repeated/);
     expect(fetchPage).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops when nextCursor is absent", async () => {
+    const fetchPage = vi.fn(async () => ({ data: { data: [1, 2] } }));
+    expect(await collectPages(fetchPage)).toEqual([1, 2]);
   });
 });

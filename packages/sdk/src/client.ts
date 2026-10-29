@@ -75,11 +75,16 @@ function withRateLimitRetry(
   };
 }
 
-// Retry-After is in seconds. X-RateLimit-Reset is a Unix timestamp in
-// seconds and serves only as a fallback.
+// Retry-After is in seconds. The reset headers are Unix timestamps in
+// seconds and serve only as a fallback: the burst window (10 s) when it is
+// exhausted, else the sustained window (60 s).
 function retryDelayMs(response: Response): number {
-  const retryAfter = response.headers.get("retry-after");
-  const reset = response.headers.get("x-ratelimit-reset");
+  const h = response.headers;
+  const retryAfter = h.get("retry-after");
+  const reset =
+    h.get("x-ratelimit-burst-remaining") === "0"
+      ? h.get("x-ratelimit-burst-reset")
+      : h.get("x-ratelimit-reset");
   let seconds = Number.NaN;
   if (retryAfter != null) seconds = Number(retryAfter);
   else if (reset != null) seconds = Number(reset) - Date.now() / 1_000;
@@ -107,7 +112,8 @@ export interface PageResult<T> {
 
 /**
  * Collects every page of a paginated list endpoint by following
- * `nextCursor` until it is null.
+ * `nextCursor` until it is null. Throws JoinError if a cursor repeats, so a
+ * truncated result never looks complete.
  *
  * @example
  * const all = await collectPages((cursor) =>
@@ -124,7 +130,9 @@ export async function collectPages<T>(
     const { data } = await fetchPage(cursor);
     items.push(...(data?.data ?? []));
     const next = data?.nextCursor;
-    if (!next || seen.has(next)) return items;
+    if (!next) return items;
+    if (seen.has(next))
+      throw new JoinError(`cursor repeated after ${items.length} records`);
     seen.add(next);
     cursor = next;
   }
