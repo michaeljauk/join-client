@@ -5,6 +5,8 @@ import {
   normalizePath,
 } from "../src/lib/request.js";
 
+const API = "https://api.join.com/v3";
+
 describe("normalizePath", () => {
   it("turns a full API URL into path and query", () => {
     const query: Record<string, unknown> = {};
@@ -24,6 +26,12 @@ describe("normalizePath", () => {
     expect(query).toEqual({ limit: 5, cursor: "abc" });
   });
 
+  it("turns repeated query keys into an array", () => {
+    const query: Record<string, unknown> = {};
+    normalizePath("/jobs?status=ONLINE&status=OFFLINE&limit=5", query);
+    expect(query).toEqual({ status: ["ONLINE", "OFFLINE"], limit: "5" });
+  });
+
   it("keeps explicit query values over URL values", () => {
     const query: Record<string, unknown> = { limit: 3 };
     normalizePath("/jobs?limit=1", query);
@@ -38,17 +46,30 @@ describe("normalizePath", () => {
 describe("externalUrl", () => {
   it("detects a pre-signed document URL", () => {
     expect(
-      externalUrl("https://storage.googleapis.com/bucket/cv.pdf?X-Sig=1")?.host,
+      externalUrl("https://storage.googleapis.com/bucket/cv.pdf?X-Sig=1", API)
+        ?.host,
     ).toBe("storage.googleapis.com");
   });
 
   it("leaves JOIN API URLs and plain paths to the client", () => {
-    expect(externalUrl("https://api.join.com/v3/jobs")).toBeUndefined();
-    expect(externalUrl("/jobs")).toBeUndefined();
+    expect(externalUrl("https://api.join.com/v3/jobs", API)).toBeUndefined();
+    expect(externalUrl("/jobs", API)).toBeUndefined();
   });
 
   it("rejects plain http", () => {
-    expect(() => externalUrl("http://example.com/cv.pdf")).toThrow(/https/);
+    expect(() => externalUrl("http://example.com/cv.pdf", API)).toThrow(
+      /https/,
+    );
+  });
+
+  it("treats a custom base URL host as the API", () => {
+    const base = "https://join.example.test/v3";
+    expect(
+      externalUrl("https://join.example.test/v3/jobs", base),
+    ).toBeUndefined();
+    expect(externalUrl("https://api.join.com/v3/jobs", base)?.host).toBe(
+      "api.join.com",
+    );
   });
 });
 
