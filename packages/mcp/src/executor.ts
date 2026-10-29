@@ -118,9 +118,6 @@ function makeProviderProxy(provider: ResolvedProvider): unknown {
           throw new Error(`Unknown tool: ${provider.name}.${prop}`);
         };
       }
-      if (provider.positionalArgs) {
-        return async (...args: unknown[]) => fn(...args);
-      }
       return async (args: unknown) => fn(args ?? {});
     },
   });
