@@ -59,7 +59,7 @@ After a spec change:
 
 `packages/cli/scripts/endpoints.mjs` maps each operation to a resource and a command name. Path
 segments and parameters become kebab-case (`/employmentTypes` -> `employment-types`,
-`createdAtGte` -> `--created-at-gte`). Action endpoints such as `PUT /applications/{id}/stage` have an
+`createdAfter` -> `--created-after`). Action endpoints such as `PUT /applications/{id}/stage` have an
 explicit entry in `OVERRIDES`.
 
 Generated behavior:

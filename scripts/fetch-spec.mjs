@@ -2,9 +2,10 @@
 // Rebuilds openapi.json from docs.join.com. JOIN publishes no single spec
 // file: every reference page embeds an OpenAPI document with one operation.
 // This script reads the page index from llms.txt, extracts each embedded
-// document and merges paths and components. Guide pages carry no document
-// and are skipped. It fails on any conflict between two pages, so a silent
-// overwrite cannot happen.
+// document and merges paths and components. Guide pages carry no
+// "# OpenAPI definition" section and are skipped. It fails when a reference
+// page has no parseable document and on any conflict between two pages, so
+// an operation cannot drop out or be overwritten silently.
 import { writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,12 +28,14 @@ const conflicts = [];
 const guides = [];
 for (const url of pageUrls) {
   const page = await fetchText(url);
-  const match = page.match(/```json\n([\s\S]*?)\n```/);
-  const doc = match ? JSON.parse(match[1]) : null;
-  if (!doc?.openapi) {
+  const heading = page.indexOf("# OpenAPI definition");
+  if (heading === -1) {
     guides.push(url);
     continue;
   }
+  const match = page.slice(heading).match(/```json\n([\s\S]*?)\n```/);
+  const doc = match ? JSON.parse(match[1]) : null;
+  if (!doc?.openapi) throw new Error(`no embedded OpenAPI document in ${url}`);
   if (!merged) {
     const { paths: _p, components: _c, ...rest } = doc;
     merged = { ...rest, paths: {}, components: {} };
