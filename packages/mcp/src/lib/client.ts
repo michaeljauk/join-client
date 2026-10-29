@@ -1,25 +1,38 @@
-import { createJoinClient, type JoinClient } from "join-sdk";
+import { createJoinClient, DEFAULT_BASE_URL, type JoinClient } from "join-sdk";
 import { loadProfile } from "./credentials.js";
 
-let cached: JoinClient | null = null;
+let cached: { client: JoinClient; baseUrl: string } | null = null;
 
 export async function getClient(): Promise<JoinClient> {
   cached ??= await resolveClient();
-  return cached;
+  return cached.client;
 }
 
-async function resolveClient(): Promise<JoinClient> {
-  const baseUrl = process.env.JOIN_BASE_URL;
+/** The API base URL the client sends its token to. */
+export async function getBaseUrl(): Promise<string> {
+  cached ??= await resolveClient();
+  return cached.baseUrl;
+}
+
+async function resolveClient(): Promise<{
+  client: JoinClient;
+  baseUrl: string;
+}> {
+  const envBaseUrl = process.env.JOIN_BASE_URL;
 
   const token = process.env.JOIN_TOKEN;
-  if (token) return createJoinClient({ token, baseUrl });
+  if (token) {
+    const baseUrl = envBaseUrl ?? DEFAULT_BASE_URL;
+    return { client: createJoinClient({ token, baseUrl }), baseUrl };
+  }
 
   const stored = await loadProfile(process.env.JOIN_PROFILE);
   if (stored) {
-    return createJoinClient({
-      token: stored.token,
-      baseUrl: baseUrl ?? stored.baseUrl,
-    });
+    const baseUrl = envBaseUrl ?? stored.baseUrl ?? DEFAULT_BASE_URL;
+    return {
+      client: createJoinClient({ token: stored.token, baseUrl }),
+      baseUrl,
+    };
   }
 
   throw new Error(

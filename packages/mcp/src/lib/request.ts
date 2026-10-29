@@ -1,13 +1,16 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { DEFAULT_BASE_URL, JoinError } from "join-sdk";
-import { getClient } from "./client.js";
+import { JoinError } from "join-sdk";
+import { getBaseUrl, getClient } from "./client.js";
 
 export interface RequestOptions {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   path: string;
-  query?: Record<string, string | number | boolean | undefined>;
+  query?: Record<
+    string,
+    string | number | boolean | (string | number)[] | undefined
+  >;
   body?: unknown;
   contentType?: string;
   rawBody?: boolean;
@@ -31,7 +34,7 @@ type Caller = (
  * is written to DOWNLOAD_DIR and the result names the local path.
  */
 export async function request(opts: RequestOptions): Promise<unknown> {
-  const documentUrl = externalUrl(opts.path);
+  const documentUrl = externalUrl(opts.path, await getBaseUrl());
   if (documentUrl) {
     if (opts.method !== "GET")
       throw new Error("Only GET is allowed on document URLs.");
@@ -66,11 +69,10 @@ export async function request(opts: RequestOptions): Promise<unknown> {
 }
 
 /** Returns the URL when `path` is an https URL outside the JOIN API host. */
-export function externalUrl(path: string): URL | undefined {
+export function externalUrl(path: string, baseUrl: string): URL | undefined {
   if (!/^https?:\/\//.test(path)) return undefined;
   const url = new URL(path);
-  const apiHost = new URL(process.env.JOIN_BASE_URL ?? DEFAULT_BASE_URL).host;
-  if (url.host === apiHost) return undefined;
+  if (url.host === new URL(baseUrl).host) return undefined;
   if (url.protocol !== "https:")
     throw new Error("Document URLs must use https.");
   return url;
@@ -84,7 +86,14 @@ async function download(url: URL): Promise<unknown> {
     );
   }
   await mkdir(DOWNLOAD_DIR, { recursive: true, mode: 0o700 });
-  const name = basename(decodeURIComponent(url.pathname)) || "document";
+  let decoded = url.pathname;
+  try {
+    decoded = decodeURIComponent(decoded);
+  } catch {
+    // Keep the raw path when it holds a malformed escape.
+  }
+  const base = basename(decoded);
+  const name = base && base !== ".." ? base : "document";
   const file = join(DOWNLOAD_DIR, `${Date.now()}-${name}`);
   const bytes = Buffer.from(await response.arrayBuffer());
   await writeFile(file, bytes, { mode: 0o600 });
@@ -107,15 +116,28 @@ export function normalizePath(
   let path = rawPath;
   if (/^https?:\/\//.test(path)) {
     const url = new URL(path);
-    for (const [k, v] of url.searchParams) query[k] ??= v;
+    mergeSearchParams(url.searchParams, query);
     path = url.pathname;
   } else if (path.includes("?")) {
     const [p = "", qs = ""] = path.split("?", 2);
-    for (const [k, v] of new URLSearchParams(qs)) query[k] ??= v;
+    mergeSearchParams(new URLSearchParams(qs), query);
     path = p;
   }
   path = path.replace(/^\/v3(?=\/)/, "");
   return path.startsWith("/") ? path : `/${path}`;
+}
+
+// A repeated key (`status=ONLINE&status=OFFLINE`) becomes an array, which the
+// client sends as repeated parameters again. Explicit query values win.
+function mergeSearchParams(
+  params: URLSearchParams,
+  query: Record<string, unknown>,
+): void {
+  for (const key of new Set(params.keys())) {
+    if (query[key] !== undefined) continue;
+    const values = params.getAll(key);
+    query[key] = values.length === 1 ? values[0] : values;
+  }
 }
 
 function stripUndefined(
