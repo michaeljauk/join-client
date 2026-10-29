@@ -16,7 +16,8 @@
 //   PATCH  /x/{id}/sub/{sid}    -> update-<singular(sub)>
 //   DELETE /x/{id}/sub/{sid}    -> delete-<singular(sub)>
 //   GET    /x/{id}/{file}       -> download (binary response)
-// Path segments and parameter names become kebab-case.
+// Path segments and parameter names become kebab-case. Path-level and
+// $ref parameters are resolved. The SDK sets Join-Version, so it gets no flag.
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,10 +30,10 @@ export const spec = JSON.parse(
 
 // Sub-resources that are actions, not collections.
 const OVERRIDES = {
-  "PATCH /jobs/{id}/activate": "activate",
-  "PATCH /jobs/{id}/archive": "archive",
-  "PATCH /jobs/{id}/changeStatus": "change-status",
+  "PUT /applications/{id}/stage": "move-stage",
 };
+
+const SDK_HEADERS = new Set(["join-version"]);
 
 const METHODS = ["get", "post", "put", "patch", "delete"];
 
@@ -41,7 +42,7 @@ export function endpoints() {
   for (const [path, ops] of Object.entries(spec.paths)) {
     for (const [method, op] of Object.entries(ops)) {
       if (!METHODS.includes(method)) continue;
-      const ep = parseEndpoint(method.toUpperCase(), path, op);
+      const ep = parseEndpoint(method.toUpperCase(), path, op, ops.parameters);
       if (ep) out.push(ep);
       else console.warn(`skipped unhandled ${method.toUpperCase()} ${path}`);
     }
@@ -49,18 +50,21 @@ export function endpoints() {
   return out;
 }
 
-function parseEndpoint(method, path, op) {
+function parseEndpoint(method, path, op, pathParams = []) {
   const segs = path.split("/").filter(Boolean);
   const resource = toKebab(segs[0]);
   const rest = segs.slice(1);
-  const params = op.parameters ?? [];
+  const params = mergeParams(pathParams, op.parameters ?? []);
   const positionals = params
     .filter((p) => p.in === "path")
     .map((p) => ({ name: p.name, description: p.description ?? p.name }));
   const query = params.filter((p) => p.in === "query");
+  const header = params.filter(
+    (p) => p.in === "header" && !SDK_HEADERS.has(p.name.toLowerCase()),
+  );
   const hasBody = Boolean(op.requestBody);
   const binary = isBinary(op);
-  const paginated = method === "GET" && query.some((q) => q.name === "page");
+  const paginated = method === "GET" && query.some((q) => q.name === "cursor");
   const command =
     OVERRIDES[`${method} ${path}`] ?? commandName(method, rest, binary);
   if (!command) return null;
@@ -73,11 +77,32 @@ function parseEndpoint(method, path, op) {
     description: op.summary || op.operationId || `${method} ${path}`,
     positionals,
     query,
+    header,
     hasBody,
     binary,
     paginated,
     op,
   };
+}
+
+// Operation parameters override path-level ones with the same name and location.
+function mergeParams(pathLevel, opLevel) {
+  const byKey = new Map();
+  for (const raw of [...pathLevel, ...opLevel]) {
+    const p = resolveRef(raw);
+    byKey.set(`${p.in}:${p.name}`, p);
+  }
+  return [...byKey.values()];
+}
+
+function resolveRef(obj) {
+  if (!obj?.$ref) return obj;
+  const target = obj.$ref
+    .replace(/^#\//, "")
+    .split("/")
+    .reduce((node, key) => node?.[key], spec);
+  if (!target) throw new Error(`unresolved $ref ${obj.$ref}`);
+  return resolveRef(target);
 }
 
 function commandName(method, rest, binary) {

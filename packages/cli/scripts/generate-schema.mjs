@@ -95,7 +95,7 @@ out.push(
   `Auto-generated from \`openapi.json\` (JOIN API **${spec.info?.version ?? "?"}**). Do not hand-edit.\n`,
 );
 out.push(
-  "List endpoints return a plain JSON array. Pagination lives in the response headers (`x-page`, `x-page-count`, `x-page-total`); use `--all` to fetch every page.\n",
+  "Responses wrap the payload under `data`. Paginated list endpoints return `{ data, nextCursor }`; pass `nextCursor` back with `--cursor`, or use `--all` to fetch every page as one array. Errors return `{ error: { code, message, details? } }`.\n",
 );
 
 out.push("## Commands\n");

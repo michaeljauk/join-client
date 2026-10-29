@@ -1,21 +1,19 @@
+import { writeFile } from "node:fs/promises";
 import { basename } from "node:path";
 import { defineCommand } from "citty";
 import { consola } from "consola";
-import { downloadCall, globalArgs, resolveClient } from "./_shared.js";
 
-// Attachment URLs in application responses look like
-// https://api.join.com/v2/attachments/<id>/<file>?sig=<sig>
-const FILE_PATH = /\/(attachments|application-files)\/([^/]+)\/([^/?]+)$/;
-
+// Document URLs in application responses are pre-signed links to external
+// storage, valid for one hour. They need no JOIN token, and the token must
+// not leave api.join.com, so this command fetches them without a client.
 export const downloadCommand = defineCommand({
   meta: {
     name: "download",
     description:
-      "Download an attachment by the full URL from an application's `attachments[].url`",
+      "Download an application document by its pre-signed URL from `documents[].url`",
   },
   args: {
-    ...globalArgs,
-    url: { type: "positional", description: "Attachment URL", required: true },
+    url: { type: "positional", description: "Document URL", required: true },
     output: {
       type: "string",
       alias: "o",
@@ -28,24 +26,28 @@ export const downloadCommand = defineCommand({
     try {
       url = new URL(args.url);
     } catch {
-      consola.error("Expected a full attachment URL.");
+      consola.error("Expected a full document URL.");
       process.exit(1);
     }
-    const match = url.pathname.match(FILE_PATH);
-    const sig = url.searchParams.get("sig");
-    if (!match || !sig) {
+    if (url.protocol !== "https:") {
+      consola.error("Document URLs must use https.");
+      process.exit(1);
+    }
+    const res = await fetch(url);
+    if (!res.ok) {
       consola.error(
-        "URL must point to /attachments/<id>/<file> or /application-files/<id>/<file> and carry a sig parameter.",
+        `Download failed with HTTP ${res.status}. Links expire after one hour; read the application again for a fresh URL.`,
       );
       process.exit(1);
     }
-    const [, kind = "", id = "", externalFileName = ""] = match;
-    const client = await resolveClient(args);
-    await downloadCall(
-      client,
-      `/${kind}/{id}/{externalFileName}`,
-      { path: { id, externalFileName }, query: { sig } },
-      args.output || basename(externalFileName),
-    );
+    const bytes = Buffer.from(await res.arrayBuffer());
+    const output =
+      args.output || decodeURIComponent(basename(url.pathname)) || "document";
+    if (output === "-") {
+      process.stdout.write(bytes);
+      return;
+    }
+    await writeFile(output, bytes);
+    consola.success(`Saved ${bytes.length} bytes to ${output}`);
   },
 });
