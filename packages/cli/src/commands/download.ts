@@ -42,11 +42,19 @@ export const downloadCommand = defineCommand({
     }
     const bytes = Buffer.from(await res.arrayBuffer());
     const output = args.output || fileName(url);
+    // A name taken from the URL never overwrites a file; `-o` may.
+    const flag = args.output ? "w" : "wx";
     if (output === "-") {
       process.stdout.write(bytes);
       return;
     }
-    await writeFile(output, bytes);
+    try {
+      await writeFile(output, bytes, { flag });
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+      consola.error(`${output} exists. Pass -o to choose the output file.`);
+      process.exit(1);
+    }
     consola.success(`Saved ${bytes.length} bytes to ${output}`);
   },
 });
@@ -60,5 +68,5 @@ function fileName(url: URL): string {
     // Keep the raw path when it holds a malformed escape.
   }
   const name = basename(path);
-  return name && name !== "." && name !== ".." ? name : "document";
+  return name && ![".", "..", "-"].includes(name) ? name : "document";
 }
