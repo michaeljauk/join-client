@@ -70,7 +70,7 @@ const cmd_list = defineCommand({
     "consent-status": { type: "string", description: "Filter by the candidate’s consent status: `ACCEPTED` or `PENDING`." },
     "created-after": { type: "string", description: "Only candidates created on or after this ISO 8601 timestamp" },
     "created-before": { type: "string", description: "Only candidates created before this ISO 8601 timestamp" },
-    all: { type: "boolean", description: "Follow nextCursor (limit 50) and print all records as one array" },
+    all: { type: "boolean", description: "Follow nextCursor from --cursor (default: the start) and print all records as one array" },
   },
   async run({ args }) {
     const client = await resolveClient(args);
@@ -85,7 +85,7 @@ const cmd_list_notes = defineCommand({
     "candidate-id": { type: "positional", description: "ID of the candidate", required: true },
     "limit": { type: "string", description: "Number of records to return" },
     "cursor": { type: "string", description: "Position from the previous response's `nextCursor`. Omit on the first request" },
-    all: { type: "boolean", description: "Follow nextCursor (limit 50) and print all records as one array" },
+    all: { type: "boolean", description: "Follow nextCursor from --cursor (default: the start) and print all records as one array" },
   },
   async run({ args }) {
     const client = await resolveClient(args);

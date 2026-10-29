@@ -45,7 +45,7 @@ const cmd_list = defineCommand({
     "created-before": { type: "string", description: "Only applications created before this ISO 8601 timestamp" },
     "updated-after": { type: "string", description: "Only applications last changed on or after this ISO 8601 timestamp" },
     "updated-before": { type: "string", description: "Only applications last changed before this ISO 8601 timestamp" },
-    all: { type: "boolean", description: "Follow nextCursor (limit 50) and print all records as one array" },
+    all: { type: "boolean", description: "Follow nextCursor from --cursor (default: the start) and print all records as one array" },
   },
   async run({ args }) {
     const client = await resolveClient(args);

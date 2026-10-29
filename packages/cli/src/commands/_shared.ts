@@ -51,9 +51,9 @@ type Caller = (
 ) => Promise<{ data?: unknown; response: Response }>;
 
 /**
- * Calls a list endpoint. With `all`, it follows `nextCursor` (limit 50) and
- * returns one combined array; otherwise it returns the `{ data, nextCursor }`
- * page as is.
+ * Calls a list endpoint. With `all`, it follows `nextCursor` and returns one
+ * combined array, starting at `--cursor` if given and using `--limit` (default
+ * 50) per request; otherwise it returns the `{ data, nextCursor }` page as is.
  */
 export async function listCall(
   client: JoinClient,
@@ -71,7 +71,11 @@ export async function listCall(
     return data;
   }
   return collectPages(async (cursor) => {
-    const query = { ...params.query, cursor, limit: 50 };
+    const query = {
+      ...params.query,
+      limit: params.query?.limit ?? 50,
+      cursor: cursor ?? params.query?.cursor,
+    };
     const res = await get(
       path as never,
       { params: { ...params, query } } as never,

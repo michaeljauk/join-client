@@ -41,8 +41,7 @@ export const downloadCommand = defineCommand({
       process.exit(1);
     }
     const bytes = Buffer.from(await res.arrayBuffer());
-    const output =
-      args.output || decodeURIComponent(basename(url.pathname)) || "document";
+    const output = args.output || fileName(url);
     if (output === "-") {
       process.stdout.write(bytes);
       return;
@@ -51,3 +50,15 @@ export const downloadCommand = defineCommand({
     consola.success(`Saved ${bytes.length} bytes to ${output}`);
   },
 });
+
+// Decode before basename: an encoded "%2F" must not become a path separator.
+function fileName(url: URL): string {
+  let path = url.pathname;
+  try {
+    path = decodeURIComponent(path);
+  } catch {
+    // Keep the raw path when it holds a malformed escape.
+  }
+  const name = basename(path);
+  return name && name !== "." && name !== ".." ? name : "document";
+}

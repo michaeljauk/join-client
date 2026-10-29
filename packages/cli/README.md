@@ -50,8 +50,8 @@ Command names follow the API paths:
 | `DELETE /x/{id}/sub/{sid}`     | `delete-<singular>`       |
 | `PUT /applications/{id}/stage` | `move-stage`              |
 
-- List commands print `{ data, nextCursor }`. Pass `--cursor` for the next page, or `--all` to
-  follow the cursor (50 per request) and print one array.
+- Paginated list commands print `{ data, nextCursor }`. Pass `--cursor` for the next page, or
+  `--all` to follow the cursor (`--limit`, default 50 per request) and print one array.
 - `--accept-language de` translates display names where JOIN supports it.
 - Mutating commands read the body from `--data '<json>'`, `--data @file.json`, `--data -`, or stdin.
 - `download` fetches a pre-signed document URL without sending the JOIN token.
