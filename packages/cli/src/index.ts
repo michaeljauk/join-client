@@ -1,6 +1,7 @@
 import { defineCommand, runMain } from "citty";
 import { authCommand } from "./commands/auth.js";
 import { downloadCommand } from "./commands/download.js";
+import { skillCommand } from "./commands/skill.js";
 import { generatedSubCommands } from "./commands/generated/_root.js";
 
 declare const __VERSION__: string;
@@ -16,6 +17,7 @@ const main = defineCommand({
   subCommands: {
     auth: authCommand,
     download: downloadCommand,
+    skill: skillCommand,
     ...generatedSubCommands,
   },
 });

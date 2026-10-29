@@ -25,7 +25,7 @@ This repo generates three packages from those documents:
 - **`join-sdk`**: a typed client on [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/). It
   retries on HTTP 429 and has a helper for cursor paging (`collectPages`).
 - **`join-com-cli`**: the `join-com` command, with one subcommand per endpoint. It prints JSON, so
-  you can pipe the output through `jq`. A global install also adds a Claude Code skill to
+  you can pipe the output through `jq`. `join-com skill install` adds a Claude Code skill to
   `~/.claude/skills/join/`.
 - **`join-mcp`**: a Model Context Protocol server for AI agents. It has two tools (`search`,
   `execute`) instead of one tool per endpoint.
@@ -58,6 +58,7 @@ join-com auth login --profile acme        # paste the token, or pipe it in
 join-com jobs list
 join-com applications list --job-id 123 --all | jq 'length'
 join-com download "<documents[].url from an application>" -o cv.pdf
+join-com skill install                    # optional: Claude Code skill
 ```
 
 SDK:
