@@ -48,8 +48,9 @@ try {
 - Every request carries `Join-Version`, pinned to the revision the types describe. Override it with
   `apiVersion` or a `Join-Version` entry in `headers`.
 - Every non-2xx response throws `JoinError` with `status`, `code` (from `error.code`) and `body`.
-- Responses wrap the payload under `data`. List endpoints return `{ data, nextCursor }`;
-  `collectPages` follows `nextCursor` until it is `null`.
+- Responses wrap the payload under `data`. Paginated list endpoints return `{ data, nextCursor }`;
+  `collectPages` follows `nextCursor` until it is `null` and throws if a cursor repeats. Lookup
+  lists (contract types, employment types, remote regions) and scorecards return `{ data }` only.
 - Document URLs in application responses are pre-signed links to external storage, valid for one
   hour. Fetch them without the JOIN token.
 
