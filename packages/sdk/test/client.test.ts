@@ -22,7 +22,7 @@ describe("createJoinClient", () => {
     const fetch = vi.fn(async () => json({ data: [], nextCursor: null }));
     const join = createJoinClient({ token: "join_sk_123", fetch });
     await join.GET("/jobs");
-    const req = fetch.mock.calls[0]![0];
+    const req = fetch.mock.calls[0][0];
     expect(req.headers.get("authorization")).toBe("Bearer join_sk_123");
     expect(req.headers.get("join-version")).toBe(DEFAULT_API_VERSION);
     expect(req.url).toBe("https://api.join.com/v3/jobs");
@@ -36,7 +36,7 @@ describe("createJoinClient", () => {
       fetch,
     });
     await join.GET("/jobs");
-    const req = fetch.mock.calls[0]![0];
+    const req = fetch.mock.calls[0][0];
     expect(req.headers.get("authorization")).toBe("Bearer tok");
     expect(req.headers.get("join-version")).toBe("2027-01-01");
   });
