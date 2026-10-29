@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/michaeljauk/join-client/compare/join-com-cli-v1.0.1...join-com-cli-v1.1.0) (2026-10-29)
+
+
+### Features
+
+* **cli:** add `skill install` command ([b5e43c9](https://github.com/michaeljauk/join-client/commit/b5e43c95712f33fd9bc621cabbc019b454c57f0f))
+
+
+### Bug Fixes
+
+* **cli:** never write through a symlinked skill file ([46c1ac8](https://github.com/michaeljauk/join-client/commit/46c1ac8218e260747f37473b69b5d2de1e5deed7))
+* **cli:** run `skill install` from the postinstall script ([85e84fb](https://github.com/michaeljauk/join-client/commit/85e84fb050d3c9e3a8fb37b5922fe42d199960ab))
+
 ## [1.0.1](https://github.com/michaeljauk/join-client/compare/join-com-cli-v1.0.0...join-com-cli-v1.0.1) (2026-10-29)
 
 

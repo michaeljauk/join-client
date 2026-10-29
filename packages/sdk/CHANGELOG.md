@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/michaeljauk/join-client/compare/join-sdk-v1.0.1...join-sdk-v1.1.0) (2026-10-29)
+
+
+### Miscellaneous Chores
+
+* **join-sdk:** Synchronize join-client versions
+
 ## [1.0.1](https://github.com/michaeljauk/join-client/compare/join-sdk-v1.0.0...join-sdk-v1.0.1) (2026-10-29)
 
 
