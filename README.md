@@ -52,7 +52,8 @@ candidates, candidate notes, scorecards, locations, contract types, employment t
 templates and remote regions. Application documents download from pre-signed URLs.
 
 JOIN API v2 is not supported from 1.0 on. The JOIN API has no endpoint to reject an application,
-update a candidate profile or send email. Use the JOIN web app for those.
+update a candidate profile or send a message. Use the JOIN web app for those. A stage move
+(`move-stage`) can trigger the stage's automated emails, as a move in JOIN does.
 
 ## Development
 
