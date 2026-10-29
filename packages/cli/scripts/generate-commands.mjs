@@ -104,7 +104,7 @@ function emitCommand(ep, varName, helpers) {
   }
   if (ep.paginated) {
     args.push(
-      `    all: { type: "boolean", description: "Follow nextCursor (limit 50) and print all records as one array" },`,
+      `    all: { type: "boolean", description: "Follow nextCursor from --cursor (default: the start) and print all records as one array" },`,
     );
   }
   if (ep.hasBody) {

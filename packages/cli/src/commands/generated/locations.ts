@@ -50,7 +50,7 @@ const cmd_list = defineCommand({
     "cursor": { type: "string", description: "Position from the previous response's `nextCursor`. Omit on the first request" },
     "country-code": { type: "string", description: "Filter by country code" },
     "city": { type: "string", description: "Filter by city name (partial match)" },
-    all: { type: "boolean", description: "Follow nextCursor (limit 50) and print all records as one array" },
+    all: { type: "boolean", description: "Follow nextCursor from --cursor (default: the start) and print all records as one array" },
   },
   async run({ args }) {
     const client = await resolveClient(args);

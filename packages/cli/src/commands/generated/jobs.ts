@@ -55,7 +55,7 @@ const cmd_list = defineCommand({
     "updated-before": { type: "string", description: "Jobs updated strictly before this time" },
     "q": { type: "string", description: "Free-text search across title and description" },
     "accept-language": { type: "string", description: "Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad." },
-    all: { type: "boolean", description: "Follow nextCursor (limit 50) and print all records as one array" },
+    all: { type: "boolean", description: "Follow nextCursor from --cursor (default: the start) and print all records as one array" },
   },
   async run({ args }) {
     const client = await resolveClient(args);

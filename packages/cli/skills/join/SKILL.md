@@ -58,7 +58,9 @@ real response: `join-com applications list --limit 1 | jq '.data[0] | keys'`.
 
 Stable facts (JOIN API v3, revision `2026-11-01`):
 
-- Every response wraps the payload under `data`. List commands return `{ data, nextCursor }`.
+- Every response wraps the payload under `data`. Paginated list commands return
+  `{ data, nextCursor }`. Contract types, employment types, remote regions and scorecards return
+  `{ data }` only, without `nextCursor`.
 - Paging: `--limit` (max 50) and `--cursor <nextCursor>`. `--all` follows the cursor and prints
   one plain array. `--sort=-createdAt` returns newest first.
 - An application has `status` (`ACTIVE`, `REJECTED`, `HIRED`) and `currentStage` (`id`, `name`,
@@ -70,16 +72,22 @@ Stable facts (JOIN API v3, revision `2026-11-01`):
 
 ## What the API cannot do
 
-The JOIN API cannot reject or cancel an application, update a candidate profile, edit a note,
-change application tags, or send email. Those actions stay in the JOIN web app. Do not try to
-emulate them with notes or stage moves unless the user asks for that.
+The JOIN API cannot reject or cancel an application, update a candidate profile, edit a note or
+change application tags. Those actions stay in the JOIN web app. Do not try to emulate them with
+notes or stage moves unless the user asks for that.
 
 ## Writes
 
-`create`, `update`, `move-stage`, `create-note`, `delete-note`, `candidates delete` and
-`locations delete` take effect immediately. Setting a job's `status` to `ONLINE` publishes it to
-job boards. `candidates delete` permanently removes the candidate with all applications, notes and
-documents. **Ask the user before every write.**
+Every `create`, `update` and `delete`, `move-stage` and `create-note` take effect immediately.
+**Ask the user before every write.** Watch these side effects:
+
+- `jobs create` creates the job `ONLINE` unless the body sets `"status": "OFFLINE"`, so it goes to
+  job boards at once. Setting `status` to `ONLINE` on `jobs update` publishes as well.
+- `applications move-stage` can trigger the stage's automated emails to the candidate, as a move
+  in JOIN does. Moving to a `HIRED` stage hires the candidate.
+- `applications create` adds a real application with candidate data to the job.
+- `candidates delete` permanently removes the candidate with all applications, notes and
+  documents.
 
 ## Errors
 
