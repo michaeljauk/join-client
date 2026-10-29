@@ -1,0 +1,19 @@
+# Changelog
+
+## 1.0.0 (2026-10-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cli:** target join api v3
+
+### Features
+
+* **cli:** add join-com cli with token profiles ([3e00758](https://github.com/michaeljauk/join-client/commit/3e00758f2a22ba4926188f380cc81439cf111497))
+* **cli:** target join api v3 ([a06c3b9](https://github.com/michaeljauk/join-client/commit/a06c3b97dcd67e9fdf50fc77f58e92b2c45bf2bc))
+
+
+### Bug Fixes
+
+* **cli:** keep download names in the working directory and resume --all ([01e81c0](https://github.com/michaeljauk/join-client/commit/01e81c0096f57b469cdda6c140fdeb260348589a))
+* **cli:** never overwrite a file named from a document url ([0390d1d](https://github.com/michaeljauk/join-client/commit/0390d1d99ce5e8086a8038a71e5ac2a8b6dfd36f))

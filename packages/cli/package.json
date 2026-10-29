@@ -1,6 +1,6 @@
 {
   "name": "join-com-cli",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Command-line interface for the JOIN recruiting API",
   "keywords": [
     "join",
