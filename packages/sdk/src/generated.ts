@@ -4,42 +4,43 @@
  */
 
 export interface paths {
-    "/application-files/{id}/{externalFileName}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get application file by id
-         * @description Get application file by id
-         */
-        get: operations["getApplicationFileById"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/applications": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         /**
-         * Get all applications
-         * @description Returns all applications
+         * List applications
+         * @description Returns your company’s applications as a paginated list.
+         *
+         *     - Results are ordered by creation date, oldest first unless `sort` requests newest first.
+         *     - Filters combine with AND. No matches returns an empty list.
+         *     - Applications deleted in JOIN are excluded.
+         *     - Follow `nextCursor` until it is `null`.
+         *
+         *     See [Pagination, filtering and sorting](pagination) for shared conventions.
          */
-        get: operations["getApplications"];
+        get: operations["listApplications"];
         put?: never;
         /**
-         * Create application
-         * @description Creates an application.
+         * Create an application
+         * @description Creates an application on a job. Provide `jobId` and exactly one of `candidateId` or `candidate`.
+         *
+         *     **Choosing a candidate**
+         *
+         *     - Use `candidateId` for a candidate already in your company.
+         *     - Use `candidate` to provide inline details. If the email matches an existing candidate, JOIN reuses that candidate, applies new tags and ignores the other supplied profile fields.
+         *
+         *     **Initial state and documents**
+         *
+         *     New applications start as `ACTIVE` in the job’s first review stage. JOIN sets their source. When `documents` is omitted for an existing candidate, their profile CV and cover letter are carried forward automatically.
+         *
+         *     Follow the [application workflow](applications-workflow), then [move the application to a stage](updateapplicationstage).
          */
         post: operations["createApplication"];
         delete?: never;
@@ -51,101 +52,63 @@ export interface paths {
     "/applications/{id}": {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path: {
+                /** @description ID of the application */
+                id: number;
+            };
             cookie?: never;
         };
         /**
-         * Get application
-         * @description Returns the application with this id
+         * Get an application
+         * @description Returns one application by ID, including the candidate, current stage, documents and screening answers. The record has the same shape as an item in the application list.
          */
         get: operations["getApplication"];
         put?: never;
         post?: never;
-        /**
-         * Delete application
-         * @description Delete the application with this id
-         */
-        delete: operations["deleteApplication"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/applications/{id}/externalData": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         /**
-         * Update application's integration data
-         * @description Updates the application's integration data with the application external id
+         * Update an application’s external reference
+         * @description Updates the external reference your system stores on an application. Send `externalId` with your reference, or `null` to clear it.
+         *
+         *     To move the application through the hiring process, use [Move an application to a stage](updateapplicationstage).
          */
-        patch: operations["updateApplicationIntegrationData"];
+        patch: operations["updateApplication"];
         trace?: never;
     };
-    "/applications/{id}/scorecards": {
+    "/applications/{id}/stage": {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List application scorecards
-         * @description Returns the application scorecards with this id
-         */
-        get: operations["listApplicationScorecards"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/applications/{id}/tags": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path: {
+                /** @description ID of the application */
+                id: number;
+            };
             cookie?: never;
         };
         get?: never;
         /**
-         * Update application tags
-         * @deprecated
-         * @description Updates the application tags for the application with this id
+         * Move an application to a stage
+         * @description Moves an application to a stage of its job. Read the job’s `stages` and send the chosen `stageId`.
+         *
+         *     **Effects of a move**
+         *
+         *     - The target stage can schedule automated emails, just as a recruiter’s move in JOIN does.
+         *     - Moving to a `HIRED` stage hires the candidate.
+         *     - Moving to the current stage makes no change.
+         *     - Rejected applications cannot be moved.
+         *
+         *     See [Get a job](getjob) to find stage IDs and [Responses, errors and retries](requests-and-responses) before retrying a move.
          */
-        put: operations["updateApplicationTags"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attachments/{id}/{externalFileName}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get attachment by id
-         * @description Get attachment by id
-         */
-        get: operations["getAttachmentById"];
-        put?: never;
+        put: operations["updateApplicationStage"];
         post?: never;
         delete?: never;
         options?: never;
@@ -156,13 +119,25 @@ export interface paths {
     "/candidates": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         /**
          * List candidates
-         * @description Returns a paginated list of all candidates belonging to the authenticated company.
+         * @description Returns your company’s candidates, each with their application summaries. Archived candidates are included; deleted candidates are excluded.
+         *
+         *     **Listing and searching**
+         *
+         *     - Without `q`, results use creation order: oldest first by default, or newest first with `sort`.
+         *     - With `q`, results use relevance order. Do not send `sort` with `q`; this returns `filter_invalid`.
+         *     - A cursor belongs to its original ordering. Do not reuse it when switching between a search and a creation-ordered list.
+         *     - Filters combine with AND. No matches returns an empty list. Follow `nextCursor` until it is `null`.
+         *
+         *     See [Pagination, filtering and sorting](pagination) for shared conventions.
          */
         get: operations["listCandidates"];
         put?: never;
@@ -173,46 +148,36 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/candidates/{id}": {
+    "/candidates/{candidateId}/notes": {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path: {
+                /** @description ID of the candidate */
+                candidateId: number;
+            };
             cookie?: never;
         };
         /**
-         * Get candidate
-         * @description Returns the candidate with this id
+         * List candidate notes
+         * @description Returns a candidate’s notes with their replies, ordered by creation date, oldest first. Follow `nextCursor` until it is `null`.
+         *
+         *     **Private notes are included.** `isPrivate` controls visibility between recruiters in JOIN; it does not restrict access through your company API token.
+         *
+         *     See [Pagination, filtering and sorting](pagination) for shared conventions.
          */
-        get: operations["getCandidate"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update candidate
-         * @description Updates candidate properies.
-         */
-        patch: operations["updateCandidate"];
-        trace?: never;
-    };
-    "/candidates/{id}/notes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get all candidate notes
-         * @description Gets all candidate notes.
-         */
-        get: operations["getCandidateNotes"];
+        get: operations["listCandidateNotes"];
         put?: never;
         /**
-         * Create candidate note
-         * @description Creates a note for the candidate.
+         * Create a candidate note
+         * @description Adds a note to a candidate.
+         *
+         *     - API-created notes are visible to the whole company and have no individual author.
+         *     - Content is limited to 2,500 characters and cannot be edited after creation.
+         *     - A candidate with 50 or more notes cannot receive a new note (`note_limit_reached`). Delete an existing note before adding another.
          */
         post: operations["createCandidateNote"];
         delete?: never;
@@ -221,42 +186,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/candidates/{id}/notes/{noteId}": {
+    "/candidates/{candidateId}/notes/{noteId}": {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path: {
+                /** @description ID of the candidate */
+                candidateId: number;
+                /** @description ID of the note */
+                noteId: number;
+            };
             cookie?: never;
         };
         get?: never;
         put?: never;
         post?: never;
         /**
-         * Delete candidate note
-         * @description Delete the candidate note
+         * Delete a candidate note
+         * @description Deletes a candidate note and its associated replies and reactions. A company API token can delete any note belonging to its company, regardless of who created it.
          */
         delete: operations["deleteCandidateNote"];
         options?: never;
         head?: never;
-        /**
-         * Update candidate note
-         * @description Updates a note for the candidate.
-         */
-        patch: operations["updateCandidateNote"];
+        patch?: never;
         trace?: never;
     };
-    "/categories": {
+    "/candidates/{id}": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path: {
+                /** @description ID of the candidate */
+                id: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get a candidate
+         * @description Returns one candidate by their ID within your company, in the same shape as an item in the candidate list. Their consent status comes from JOIN’s consent record; when no record exists, the status is `PENDING`.
+         */
+        get: operations["getCandidate"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a candidate
+         * @description Permanently deletes a candidate from your company, including all their applications, notes and attachments.
+         *
+         *     **This cannot be undone.** Subsequent reads return `candidate_not_found`. The deletion is not attributed to an individual company user. Use this operation when acting on a candidate’s erasure request.
+         */
+        delete: operations["deleteCandidate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contract-types": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         /**
-         * Get all categories
-         * @description Returns all categories
+         * List contract types
+         * @description Returns contract types and the limits they impose on a job’s employment terms. Use a returned ID as `contractTypeId` when creating or updating a job.
+         *
+         *     Filter by `countryCode` for on-site or hybrid jobs. Omit it for the generic types used by remote jobs. Results are ordered by creation date, oldest first, and returned together in one response.
          */
-        get: operations["getCategories"];
+        get: operations["listContractTypes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -265,18 +271,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/employmentTypes": {
+    "/employment-types": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         /**
-         * Get all employment types
-         * @description Returns all employment types
+         * List employment types
+         * @description Returns employment types and their slugs. Use the slug to filter jobs by `employmentType` or interpret a job’s returned employment type.
+         *
+         *     A job’s employment type follows from its contract type. Results are ordered by creation date, oldest first, and returned together in one response.
          */
-        get: operations["getEmploymentTypes"];
+        get: operations["listEmploymentTypes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -288,21 +299,38 @@ export interface paths {
     "/jobs": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         /**
-         * Get all jobs
-         * @description Returns all jobs
-         *     Note: By default, only active jobs will be returned but this can be overridden by using the "status" parameter.
+         * List jobs
+         * @description Returns your company’s published jobs. Drafts are excluded.
+         *
+         *     - Results are paginated and ordered by creation date, oldest first unless `sort` requests newest first.
+         *     - Filters combine with AND. No matches returns an empty list.
+         *     - Follow `nextCursor` until it is `null`.
+         *
+         *     See [Pagination, filtering and sorting](pagination) for shared conventions.
          */
-        get: operations["getJobs"];
+        get: operations["listJobs"];
         put?: never;
         /**
-         * Create job
-         * @description Creates a job
-         *     Note: When a job is created, it will be automatically set as active (meaning that the job will be multiposted on job boards).
+         * Create a job
+         * @description Creates and publishes a job. Provide its title, description, work location and contract type.
+         *
+         *     **Publishing effects**
+         *
+         *     - `ONLINE` posts the job to job boards.
+         *     - `OFFLINE` keeps it internal for direct sourcing and internal hiring, without multiposting.
+         *     - Both statuses run publish validation and count toward your company’s active-job limit.
+         *
+         *     Choose IDs from the Locations, Contract types, Pipeline templates and Remote regions endpoints as needed. Employment type follows from the contract type.
+         *
+         *     See the [job workflow](create-and-manage-jobs) for choosing these values and [Update a job](updatejob) for later changes.
          */
         post: operations["createJob"];
         delete?: never;
@@ -314,13 +342,21 @@ export interface paths {
     "/jobs/{id}": {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path: {
+                /** @description ID of the job */
+                id: number;
+            };
             cookie?: never;
         };
         /**
-         * Get job
-         * @description Returns the job with this id
+         * Get a job
+         * @description Returns a published job, including its hiring stages and their IDs.
+         *
+         *     An unknown ID, a draft or another company’s job returns 404. A draft keeps its ID when published, so a 404 can later become a successful response; do not treat it as permanent.
          */
         get: operations["getJob"];
         put?: never;
@@ -329,136 +365,171 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Update job
-         * @description Updates a job
+         * Update a job
+         * @description Updates a published job’s details, status, or both.
+         *
+         *     **Updating fields**
+         *
+         *     - Omitted fields stay unchanged. Send `null` only for fields documented as nullable.
+         *     - Provided work locations, compensation, application forms and hiring-team arrays replace their previous values in full. Read each field’s rules before sending a partial object.
+         *     - Employment terms have their own field-level rules; see `employmentTerms`.
+         *
+         *     **Saving changes and handling failures**
+         *
+         *     Job fields, hiring-team assignments and status are saved together. If a status transition is refused, those changes stay unapplied. Custom screening questions are updated separately before that save and can remain changed if a later step fails. Read the job, including its application form, before deciding what to retry. If updates overlap, the last write determines the stored values.
+         *
+         *     See [Responses, errors and retries](requests-and-responses) for handling an uncertain write outcome.
          */
         patch: operations["updateJob"];
         trace?: never;
     };
-    "/jobs/{id}/activate": {
+    "/locations": {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Activate job
-         * @deprecated
-         * @description Activates an archived job. Once a job is activated, it will be multiposted on job boards
-         *     Note: If a job is already active, an error is raised but the job will remain active.
-         */
-        patch: operations["activateJob"];
-        trace?: never;
-    };
-    "/jobs/{id}/archive": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Archive job
-         * @deprecated
-         * @description Archives an active job. Once a job is archived, it will not longer be multiposted on job boards
-         *     Note: If a job is already archived, an error is raised but the job will remain archived.
-         */
-        patch: operations["archiveJob"];
-        trace?: never;
-    };
-    "/jobs/{id}/changeStatus": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Updates a job status
-         * @description Updates a job status
-         */
-        patch: operations["updateJobStatus"];
-        trace?: never;
-    };
-    "/offices": {
-        parameters: {
-            query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         /**
-         * Get all offices
-         * @description Returns all offices
+         * List locations
+         * @description Returns your company’s locations, ordered by creation date, oldest first.
+         *
+         *     Filter by `countryCode` (ISO 3166-1 alpha-2) or `city` (partial match). Results are paginated: follow `nextCursor` until it is `null`.
+         *
+         *     See [Pagination, filtering and sorting](pagination) for shared conventions.
          */
-        get: operations["getOffices"];
+        get: operations["listLocations"];
         put?: never;
         /**
-         * Create office
-         * @description Creates an office.
+         * Create a location
+         * @description Creates a location. Provide an `address` with `countryCode` and `city`; the location name, street details and postal code are optional. The postal code is validated against its country.
+         *
+         *     Use `establishmentId` where an official establishment number applies, such as SIRET in France. Setting `isDefault: true` makes this location the company default and removes that designation from the previous default.
+         *
+         *     See [Update a location](updatelocation) for subsequent changes.
          */
-        post: operations["createOffice"];
+        post: operations["createLocation"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/offices/{id}": {
+    "/locations/{id}": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path: {
+                /** @description ID of the location */
+                id: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Get a location
+         * @description Returns one location by its ID, including its address and whether it is the company default.
+         */
+        get: operations["getLocation"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a location
+         * @description Deletes a location.
+         *
+         *     - The company default cannot be deleted (`location_is_default`); choose another default first.
+         *     - A location used by active jobs cannot be deleted (`location_referenced_by_active_jobs`).
+         */
+        delete: operations["deleteLocation"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a location
+         * @description Updates the fields you supply on a location. Omitted fields stay unchanged.
+         *
+         *     - A supplied `address` replaces the entire address: include `countryCode` and `city`, plus any street details you want to retain.
+         *     - Setting `isDefault: true` makes this location the company default.
+         *     - You cannot set `isDefault: false` on the current default (`location_default_required`). Make another location the default instead.
+         */
+        patch: operations["updateLocation"];
+        trace?: never;
+    };
+    "/pipeline-templates": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         /**
-         * Get office
-         * @description Returns the office with this id
+         * List pipeline templates
+         * @description Returns your company’s pipeline templates and their ordered stages. Use a template ID as `pipelineTemplateId` when creating a job.
+         *
+         *     To move an application, read the created job’s `stages` and use those stage IDs. Results are paginated and ordered by creation date, oldest first; follow `nextCursor` until it is `null`.
+         *
+         *     See [Pagination, filtering and sorting](pagination) for shared conventions.
          */
-        get: operations["getOffice"];
+        get: operations["listPipelineTemplates"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        /**
-         * Update office
-         * @description Updates an office
-         */
-        patch: operations["updateOffice"];
+        patch?: never;
         trace?: never;
     };
-    "/seniorityLevels": {
+    "/remote-regions": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         /**
-         * Get all seniority levels
-         * @description Returns all seniority levels
+         * List remote regions
+         * @description Returns the regions available for remote jobs. Use an ID as `remoteRegionId` when creating, updating or filtering a region-based remote job.
+         *
+         *     Filter by `countryCode` or search by name with `q`. Results are ordered by creation date, oldest first, and returned together in one response.
          */
-        get: operations["getSeniorityLevels"];
+        get: operations["listRemoteRegions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/scorecards": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List candidate scorecards
+         * @description Returns published interview scorecards for the required `candidateId`, across the jobs the candidate applied to in your company.
+         *
+         *     Includes feedback from all interviewers, including scorecards on earlier or withdrawn applications. Results are ordered by creation date, oldest first, and returned together in one response.
+         *
+         *     See the [candidate, notes and scorecards workflow](candidates-workflow).
+         */
+        get: operations["listScorecards"];
         put?: never;
         post?: never;
         delete?: never;
@@ -473,1487 +544,2100 @@ export interface components {
     schemas: {
         Application: {
             /**
-             * @description id of the application
-             * @example 1234
+             * @description Unique identifier
+             * @example 998877
              */
-            id?: number;
+            id: number;
             /**
-             * Format: date-time
-             * @description creation time of the application
-             * @example 2020-01-01T00:00:00.000Z
-             */
-            createdAt?: string;
-            /**
-             * Format: date-time
-             * @description update time of the application
-             * @example 2020-01-01T00:00:00.000Z
-             */
-            lastUpdatedAt?: string;
-            attachments?: {
-                /**
-                 * @description type of extension
-                 * @enum {string}
-                 */
-                type?: "CV" | "COVER_LETTER" | "OTHER" | "CERTIFICATE_OF_EMPLOYMENT" | "LETTER_OF_RECOMMENDATION" | "PORTFOLIO" | "CERTIFICATE" | "DIPLOMA" | "JOIN_CV";
-                /**
-                 * @description url to the attachment
-                 * @example https://api.join.com/v2/attachments/cv.pdf?sig=1234abcd
-                 */
-                url?: string;
-            }[];
-            source?: {
-                /**
-                 * @description product from which the application originated
-                 * @example indeed (Limited)
-                 */
-                product?: string;
-                /**
-                 * @description whether the application originated from a premium source
-                 * @example false
-                 */
-                isPremium?: boolean;
-            };
-            job?: {
-                /**
-                 * @description id of the job
-                 * @example 1234
-                 */
-                id?: number;
-                /**
-                 * @description title of the job
-                 * @example Senior Recruiter (m/w/d)
-                 */
-                title?: string;
-                /**
-                 * @description id used to identify the job outside Join
-                 * @example 1234abcd
-                 */
-                externalId?: string;
-            };
-            candidate?: {
-                /**
-                 * @description id of the candidate
-                 * @example 123
-                 */
-                id?: number;
-                /**
-                 * @description first name of the candidate
-                 * @example Max
-                 */
-                firstName?: string;
-                /**
-                 * @description last name of the candidate
-                 * @example Mustermann
-                 */
-                lastName?: string;
-                /**
-                 * @description email address of the candidate
-                 * @example max.mustermann@gmail.com
-                 */
-                email?: string;
-                /**
-                 * @description phone number of the candidate
-                 * @example +49123456789
-                 */
-                phoneNumber?: string;
-                /** @description country of the candidate */
-                country?: {
-                    /** @example Germany */
-                    name?: string;
-                    /** @example DE */
-                    iso3166?: string;
-                };
-                /** @description array of candidate tags */
-                tags?: string[];
-                /** @description array of professional links */
-                professionalLinks?: {
-                    /** @example LINKEDIN */
-                    type?: string;
-                    /** @example https://www.linkedin.com/in/some-user-12345678/ */
-                    url?: string;
-                }[];
-            };
-            screeningQuestions?: {
-                /**
-                 * @description screening question
-                 * @example What is your current proficiency in German?
-                 */
-                question?: string;
-                /**
-                 * @description type of the screening question
-                 * @example TEXT
-                 * @enum {string}
-                 */
-                type?: "TEXT" | "BOOLEAN" | "INTEGER" | "DATE" | "SINGLE_CHOICE" | "MULTI_CHOICE" | "FILE";
-                /**
-                 * @description `TEXT`, `BOOLEAN`, `INTEGER`, `DATE`, `SINGLE_CHOICE` - string will be returned;
-                 *     `MULTI_CHOICE` - comma separated string;
-                 *     `FILE` - 'FILE'
-                 * @example Elementary
-                 */
-                answer?: string;
-                /** @description file object. Will be present for `FILE` type question */
-                file?: {
-                    /**
-                     * @description file name
-                     * @example cv.pdf
-                     */
-                    name?: string;
-                    /**
-                     * @description path to the file
-                     * @example https://api.join.com/v2/attachments/cv.pdf?sig=1234abcd
-                     */
-                    data?: string;
-                };
-                /**
-                 * @description whether the screening question was not answered
-                 * @example false
-                 */
-                isSkipped?: boolean;
-            }[];
-            consent?: {
-                /**
-                 * @description id of the consent
-                 * @example 1234
-                 */
-                id?: number;
-                /**
-                 * @description email address of the candidate
-                 * @example john.doe@gmail.com
-                 */
-                candidateEmail?: string;
-                /**
-                 * @description consent status
-                 * @example ACCEPTED
-                 * @enum {string}
-                 */
-                consentStatus?: "ACCEPTED" | "REJECTED" | "PENDING";
-                /**
-                 * Format: date-time
-                 * @description Date, when consent was requested
-                 * @example 2023-10-16T12:34:05.138Z
-                 */
-                consentRequestedAt?: string;
-                /**
-                 * Format: date-time
-                 * @description Date, when consent was updated
-                 * @example 2023-10-16T12:34:05.138Z
-                 */
-                consentUpdatedAt?: string;
-                /**
-                 * @description Shows is consent can be requested
-                 * @example true
-                 */
-                canRequest?: boolean;
-            };
-            /**
-             * @description external id of the application
-             * @example DE2984HSDF
-             */
-            integrationExternalId?: string;
-            /**
-             * @deprecated
-             * @description Hiring state. SCREENING and QUALIFIED are deprecated and will be removed on 2026-11-01. Please migrate to hiringState before that date.
-             * @example QUALIFIED
-             * @enum {string}
-             */
-            state?: "SCREENING" | "QUALIFIED" | "REJECTED" | "HIRED" | "OFFER";
-            /**
-             * @description Canonical hiring state. Use instead of the deprecated `state` field.
-             * @example ACTIVE
-             * @enum {string}
-             */
-            hiringState?: "APPLIED" | "ACTIVE" | "REJECTED" | "HIRED" | "OFFER";
-            pipelineStage?: {
-                /**
-                 * @description id of the pipeline stage
-                 * @example 1234
-                 */
-                id?: number;
-                /**
-                 * @description name of the pipeline stage
-                 * @example Application Review
-                 */
-                name?: string;
-                /**
-                 * @description type of the pipeline stage
-                 * @example APPLICATION_REVIEW
-                 * @enum {string}
-                 */
-                type?: "APPLIED" | "APPLICATION_REVIEW" | "INTERVIEW" | "OFFER" | "HIRED";
-                /**
-                 * @description order of the pipeline stage
-                 * @example 1
-                 */
-                order?: number;
-            };
-            /**
-             * @deprecated
-             * @description Deprecated. Use `pipelineStage` instead.
-             */
-            currentStage?: {
-                /**
-                 * @description id of the application pipeline stage
-                 * @example 1234
-                 */
-                id?: number;
-                /**
-                 * @description name of the application pipeline stage
-                 * @example APPLICATION_REVIEW
-                 * @enum {string}
-                 */
-                name?: "APPLIED" | "APPLICATION_REVIEW" | "INTERVIEW" | "OFFER" | "HIRED";
-                /**
-                 * @description index of the application pipeline stage
-                 * @example 1
-                 */
-                index?: number;
-            };
-        };
-        ApplicationId: {
-            /**
-             * @description id of the application
-             * @example 1234
-             */
-            id?: number;
-        };
-        Candidate: {
-            /**
-             * @description Candidate ID
-             * @example 1234
-             */
-            id?: number;
-            /**
-             * @description First name of the candidate
-             * @example John
-             */
-            firstName?: string;
-            /**
-             * @description Last name of the candidate
-             * @example Doe
-             */
-            lastName?: string;
-            /**
-             * @description Primary email address
-             * @example john.doe@example.com
-             */
-            email?: string;
-            /**
-             * @description Phone number
-             * @example +49123456789
-             */
-            phone?: string | null;
-            /** @description Country of the candidate */
-            country?: {
-                /**
-                 * @description Country name
-                 * @example Germany
-                 */
-                name?: string;
-                /**
-                 * @description 2-letter ISO 3166-1 alpha-2 country code
-                 * @example DE
-                 */
-                code?: string;
-            } | null;
-            /**
-             * @description Candidate source
-             * @example ORGANIC
-             */
-            source?: string | null;
-            /**
-             * @description Array of tag names
-             * @example [
-             *       "tag1",
-             *       "tag2"
-             *     ]
-             */
-            tags?: string[];
-            /** @description Array of professional links */
-            professionalLinks?: {
-                /**
-                 * @description Link type
-                 * @example LINKEDIN
-                 */
-                type?: string;
-                /**
-                 * @description Link URL
-                 * @example https://www.linkedin.com/in/johndoe
-                 */
-                url?: string;
-            }[];
-            /** @description Consent status object */
-            consent?: {
-                /**
-                 * @description Consent record ID
-                 * @example 42
-                 */
-                id?: number;
-                /**
-                 * @description Email the consent request was sent to
-                 * @example john.doe@example.com
-                 */
-                candidateEmail?: string;
-                /**
-                 * @description Consent status
-                 * @example ACCEPTED
-                 */
-                consentStatus?: string;
-                /**
-                 * Format: date-time
-                 * @description When consent was requested
-                 * @example 2020-01-01T00:00:00.000Z
-                 */
-                consentRequestedAt?: string;
-                /**
-                 * Format: date-time
-                 * @description When consent status last changed
-                 * @example 2020-01-01T00:00:00.000Z
-                 */
-                consentUpdatedAt?: string;
-            } | null;
-            /** @description Applications associated with this candidate */
-            applications?: {
-                /**
-                 * @description Application ID
-                 * @example 5678
-                 */
-                applicationId?: number;
-                /** @description Job this application belongs to */
-                job?: {
-                    /**
-                     * @description Job ID
-                     * @example 200
-                     */
-                    id?: number;
-                    /**
-                     * @description Job title
-                     * @example Senior Engineer
-                     */
-                    title?: string;
-                };
-                /**
-                 * @description Current pipeline state
-                 * @example ACTIVE
-                 */
-                state?: string;
-                /**
-                 * Format: date-time
-                 * @description When the application was created
-                 * @example 2020-01-01T00:00:00.000Z
-                 */
-                appliedAt?: string;
-            }[];
-            /** @description Candidate notes — only present when include=notes is requested */
-            notes?: components["schemas"]["Note"][];
-            /**
-             * Format: date-time
-             * @description Candidate creation timestamp
-             * @example 2020-01-01T00:00:00.000Z
-             */
-            createdAt?: string;
-        };
-        CategoryWithChild: {
-            /**
-             * @description id of the category
-             * @example 1234
-             */
-            id?: number;
-            /**
-             * @description Category slug
-             * @example design
-             */
-            slug?: string;
-            /**
-             * @description Category name
-             * @example Design
-             */
-            name?: string;
-            subCategories?: {
-                /**
-                 * @description id of the category
-                 * @example 1234
-                 */
-                id?: number;
-                /**
-                 * @description Category slug
-                 * @example design
-                 */
-                slug?: string;
-                /**
-                 * @description Category name
-                 * @example Design
-                 */
-                name?: string;
-            }[];
-        };
-        CreateApplication: {
-            /** @description candidate to be added to the job */
-            candidate: {
-                /**
-                 * Format: email
-                 * @description candidate email
-                 * @example john@doe.com
-                 */
-                email: string;
-                /**
-                 * @description candidate first name
-                 * @example John
-                 */
-                firstName: string;
-                /**
-                 * @description candidate last name
-                 * @example Doe
-                 */
-                lastName: string;
-                /**
-                 * @description candidate phone number including country code
-                 * @example +491765678905
-                 */
-                phone?: string;
-            };
-            /** @description documents of the candidate */
-            documents?: components["schemas"]["CreateDocument"][];
-            /**
-             * @description id of the job
-             * @example 1234
+             * @description ID of the job applied to
+             * @example 4321
              */
             jobId: number;
             /**
-             * @description The channel from which the candidate is sourced
-             * @enum {string}
+             * @description Your own reference for this application, set through the create or update endpoint. Limited to 50 characters; a longer value is refused with `validation_error`.
+             * @example ats-2026-0001
              */
-            source?: "ORGANIC" | "REFERRALS" | "JOB_BOARDS" | "SOCIAL_MEDIA" | "AGENCY" | "SOURCING_TOOLS" | "EVENTS" | "INTERNAL_APPLICATION" | "OTHER";
+            externalId: string | null;
+            candidate: components["schemas"]["ApplicationCandidate"];
+            status: components["schemas"]["ApplicationStatus"];
+            /** @description The stage the application sits in, including `APPLIED` for one rejected by a knockout question; `null` only when JOIN holds no stage for it */
+            currentStage: components["schemas"]["ApplicationStage"] | null;
+            /** @description Documents attached to the application, with pre-signed links valid for 1 hour */
+            documents: components["schemas"]["ApplicationDocument"][];
+            /** @description The job’s custom screening questions with this candidate’s answers */
+            screeningQuestions: components["schemas"]["ScreeningQuestionAnswer"][];
+            source: components["schemas"]["Source"];
             /**
-             * @description external id of the application
-             * @example SFE35TDF
+             * Format: date-time
+             * @description When the application was created
+             * @example 2026-11-01T09:30:00.000Z
              */
-            integrationExternalId?: string;
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description When the application was last changed
+             * @example 2026-11-01T09:30:00.000Z
+             */
+            updatedAt: string;
         };
-        CreateDocument: {
+        /** @description The candidate this application belongs to, within your company. */
+        ApplicationCandidate: {
             /**
-             * @description type of file
-             * @enum {string}
+             * @description Unique identifier of the candidate within your company
+             * @example 7788
              */
-            type: "CV" | "COVER_LETTER" | "OTHER" | "CERTIFICATE_OF_EMPLOYMENT" | "LETTER_OF_RECOMMENDATION" | "PORTFOLIO" | "CERTIFICATE" | "DIPLOMA";
+            id: number;
             /**
-             * @description file name
-             * @example john_cv.pdf
+             * @description First name
+             * @example Ada
+             */
+            firstName: string;
+            /**
+             * @description Last name
+             * @example Lovelace
+             */
+            lastName: string | null;
+            /**
+             * @description Email address, as held for your company
+             * @example ada@example.com
+             */
+            email: string;
+            /**
+             * @description Phone number
+             * @example +49 30 123456
+             */
+            phoneNumber: string | null;
+            /**
+             * @description Country of residence as an ISO 3166-1 alpha-2 code
+             * @example DE
+             */
+            countryCode: string | null;
+            /** @description Links from the candidate’s talent profile. Read-only */
+            professionalLinks: components["schemas"]["ProfessionalLink"][];
+            /**
+             * @description Tag names applied to the candidate by your company
+             * @example [
+             *       "Senior"
+             *     ]
+             */
+            tags: string[];
+            consent: components["schemas"]["CandidateConsent"];
+        };
+        /** @description A CV or cover letter attached to an application, with a temporary download URL. */
+        ApplicationDocument: {
+            type: components["schemas"]["DocumentType"];
+            /**
+             * @description File name including its extension
+             * @example ada-lovelace-cv.pdf
              */
             name: string;
-            /** @description base64 encoded string */
-            data: string;
-        };
-        CreateJob: {
             /**
-             * @description id used to identify the job outside Join
-             * @example 1234abcd
+             * @description Pre-signed download link, valid for 1 hour from the moment the response was generated
+             * @example https://storage.googleapis.com/join-attachments/...
+             */
+            url: string;
+        };
+        /** @description Single-application responses wrap the application under `data`. */
+        ApplicationEnvelope: {
+            data: components["schemas"]["Application"];
+        };
+        /** @description The documents and custom screening questions a candidate is asked to provide. */
+        ApplicationForm: {
+            /** @description Documents asked for, before the custom questions. `CV` is always present */
+            documents: components["schemas"]["ApplicationFormDocument"][];
+            /** @description Custom questions, after the documents, in ascending `order` */
+            screeningQuestions: components["schemas"]["ScreeningQuestion"][];
+        };
+        /** @description A document the candidate is asked to provide. */
+        ApplicationFormDocument: {
+            type: components["schemas"]["DocumentType"];
+            constraint: components["schemas"]["DocumentConstraint"];
+        };
+        /** @description Cursors are opaque — pass them back as-is and do not parse or construct them. */
+        ApplicationsPage: {
+            /** @description The array of records */
+            data: components["schemas"]["Application"][];
+            /** @description The cursor to pass on the next request. `null` when there are no more records */
+            nextCursor: string | null;
+        };
+        /** @description The stage an application currently sits in. */
+        ApplicationStage: {
+            /**
+             * @description Unique identifier
+             * @example 501
+             */
+            id: number;
+            /**
+             * @description Stage name as configured on the pipeline
+             * @example Phone screen
+             */
+            name: string;
+            type: components["schemas"]["PipelineStageType"];
+            /**
+             * @description Position in the pipeline, from 1
+             * @example 2
+             */
+            order: number;
+        };
+        /**
+         * @description Where an application stands in the hiring process. `ACTIVE` means still in process, so an application in an offer stage is `ACTIVE`; this differs from the Active tab in JOIN, which also lists hired applications. `REJECTED` covers both a rejection by your company and a withdrawal by the candidate. The current stage is in `currentStage`.
+         * @example ACTIVE
+         * @enum {string}
+         */
+        ApplicationStatus: "ACTIVE" | "REJECTED" | "HIRED";
+        /**
+         * @description A role assignable to a job. `SYSTEM_ADMIN` is excluded — it follows from the company role.
+         * @example HIRING_MANAGER
+         * @enum {string}
+         */
+        AssignableHiringTeamRole: "ADMIN" | "HIRING_MANAGER" | "REVIEWER";
+        /**
+         * @description The interviewer’s rating of one scorecard attribute. `NOT_RATED` when they skipped the attribute.
+         * @example STRONG
+         * @enum {string}
+         */
+        AttributeRating: "NOT_RATED" | "WEAK" | "ADEQUATE" | "STRONG" | "EXCEPTIONAL";
+        Candidate: {
+            /**
+             * @description Unique identifier of the candidate within your company
+             * @example 7788
+             */
+            id: number;
+            /**
+             * @description First name
+             * @example Ada
+             */
+            firstName: string;
+            /**
+             * @description Last name
+             * @example Lovelace
+             */
+            lastName: string | null;
+            /**
+             * @description Email address, as held for your company
+             * @example ada@example.com
+             */
+            email: string;
+            /**
+             * @description Phone number
+             * @example +49 30 123456
+             */
+            phoneNumber: string | null;
+            /**
+             * @description Country of residence as an ISO 3166-1 alpha-2 code
+             * @example DE
+             */
+            countryCode: string | null;
+            /** @description Where the candidate came from */
+            source: components["schemas"]["Source"] | null;
+            /**
+             * @description Tag names applied to the candidate by your company
+             * @example [
+             *       "Senior"
+             *     ]
+             */
+            tags: string[];
+            /** @description Links from the candidate’s talent profile. Read-only */
+            professionalLinks: components["schemas"]["ProfessionalLink"][];
+            consent: components["schemas"]["CandidateConsent"];
+            /** @description Every application this candidate has in your company */
+            applications: components["schemas"]["CandidateApplicationSummary"][];
+            /**
+             * Format: date-time
+             * @description When the candidate was created in your company
+             * @example 2026-11-01T09:30:00.000Z
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description When the candidate was last changed
+             * @example 2026-11-01T09:30:00.000Z
+             */
+            updatedAt: string;
+        };
+        /** @description A summary of one application. The candidate response includes all their application summaries. Use [Get an application](getapplication) for the full record. */
+        CandidateApplicationSummary: {
+            /**
+             * @description Unique identifier
+             * @example 998877
+             */
+            id: number;
+            /**
+             * @description ID of the job applied to
+             * @example 4321
+             */
+            jobId: number;
+            status: components["schemas"]["ApplicationStatus"];
+            /** @description The stage the application sits in, including `APPLIED` for one rejected by a knockout question; `null` only when JOIN holds no stage for it */
+            currentStage: components["schemas"]["ApplicationStage"] | null;
+            /**
+             * Format: date-time
+             * @description When the application was created
+             * @example 2026-11-01T09:30:00.000Z
+             */
+            createdAt: string;
+        };
+        /** @description The candidate’s consent to your company holding their data. */
+        CandidateConsent: {
+            status: components["schemas"]["ConsentStatus"];
+            /**
+             * Format: date-time
+             * @description When consent was requested; `null` when it never was
+             * @example 2026-11-01T09:30:00.000Z
+             */
+            requestedAt: string | null;
+            /**
+             * Format: date-time
+             * @description When the status last changed; `null` when there is no record
+             * @example 2026-11-01T09:30:00.000Z
+             */
+            updatedAt: string | null;
+        };
+        /** @description Single-candidate responses wrap the candidate under `data`. */
+        CandidateEnvelope: {
+            data: components["schemas"]["Candidate"];
+        };
+        /** @description Cursors are opaque — pass them back as-is and do not parse or construct them. */
+        CandidatesPage: {
+            /** @description The array of records */
+            data: components["schemas"]["Candidate"][];
+            /** @description The cursor to pass on the next request. `null` when there are no more records */
+            nextCursor: string | null;
+        };
+        /** @description What the job pays, and whether that is public. */
+        Compensation: {
+            /** @description The salary; `null` when none is set */
+            salary?: components["schemas"]["Salary"] | null;
+            visibility: components["schemas"]["SalaryVisibility"];
+        };
+        /**
+         * @description The candidate’s consent status. When no consent record exists, the status is `PENDING`. Candidates with `REJECTED` consent are excluded from the candidate list.
+         * @example ACCEPTED
+         * @enum {string}
+         */
+        ConsentStatus: "ACCEPTED" | "REJECTED" | "PENDING";
+        /**
+         * @description Filter candidates by `ACCEPTED` or `PENDING` consent. Candidates with `REJECTED` consent are excluded from the list.
+         * @example ACCEPTED
+         * @enum {string}
+         */
+        ConsentStatusFilter: "ACCEPTED" | "PENDING";
+        /** @description The person shown on the public job ad. */
+        ContactPerson: {
+            /**
+             * @description Full name
+             * @example Alex Fischer
+             */
+            name: string;
+            /**
+             * @description Position
+             * @example Head of Engineering
+             */
+            title?: string | null;
+            /**
+             * Format: email
+             * @description Email
+             * @example alex.fischer@example.com
+             */
+            email: string;
+        };
+        /** @description A contract type a job may be assigned, with the bounds that validate the job’s `employmentTerms`: the `max*` and `min*` fields bound what may be sent, and the `has*` flags name the terms it does not allow. */
+        ContractType: {
+            /**
+             * @description Unique identifier
+             * @example 12
+             */
+            id: number;
+            /**
+             * @description Display name
+             * @example Permanent employment
+             */
+            name: string;
+            /** @description The employment type this contract type belongs to. */
+            employmentType: {
+                /**
+                 * @description Identifier; see `GET /employment-types`
+                 * @example 3
+                 */
+                id: number;
+                /**
+                 * @description Display name
+                 * @example Full-time
+                 */
+                name: string;
+            };
+            /**
+             * @description ISO 3166-1 alpha-2 code of the country it applies to. `null` for a generic type, which is what a remote job uses
+             * @example DE
+             */
+            countryCode: string | null;
+            /**
+             * @description When `true`, `employmentTerms.durationMonths` must be `null`
+             * @example true
+             */
+            hasUnlimitedDuration: boolean;
+            /**
+             * @description Upper bound for `employmentTerms.durationMonths`
+             * @example 24
+             */
+            maxDurationMonths: number | null;
+            /**
+             * @description When `true`, `employmentTerms.probationMonths` must be `null`
+             * @example false
+             */
+            hasNoProbation: boolean;
+            /**
+             * @description Upper bound for `employmentTerms.probationMonths`
+             * @example 6
+             */
+            maxProbationMonths: number | null;
+            /**
+             * @description When `true`, `employmentTerms.annualVacationDays` must be `null`
+             * @example false
+             */
+            hasNoVacation: boolean;
+            /**
+             * @description Lower bound for `employmentTerms.weeklyWorkingHours`
+             * @example 20
+             */
+            minWeeklyWorkingHours: number;
+            /**
+             * @description Upper bound for `employmentTerms.weeklyWorkingHours`
+             * @example 48
+             */
+            maxWeeklyWorkingHours: number;
+        };
+        /** @description All matching records, returned together in `data`. */
+        ContractTypesList: {
+            /** @description The array of records */
+            data: components["schemas"]["ContractType"][];
+        };
+        /** @description Supply exactly one of `candidateId` and `candidate`. Supplying both, or neither, is rejected with `validation_error`. */
+        CreateApplication: {
+            /**
+             * @description ID of the job to apply to. The job must not be archived
+             * @example 4321
+             */
+            jobId: number;
+            /**
+             * @description Your own reference for this application. Limited to 50 characters; a longer value is refused with `validation_error`. Must contain at least one non-whitespace character.
+             * @example ats-2026-0001
              */
             externalId?: string;
             /**
-             * @description title of the job
-             * @example Senior Recruiter (m/w/d)
+             * @description ID of an existing candidate in your company. Either supply this field or `candidate`, not both
+             * @example 7788
+             */
+            candidateId?: number;
+            /** @description A candidate described inline. When the email is already known to your company, that candidate is reused rather than the request being refused. Either supply this field or `candidateId`, not both */
+            candidate?: components["schemas"]["CreateApplicationCandidate"];
+            /** @description Documents for this application. When omitted, an existing candidate’s profile CV and cover letter are carried forward; no other document type is */
+            documents?: components["schemas"]["CreateApplicationDocument"][];
+        };
+        /** @description Inline candidate details. If the email already exists in your company, JOIN reuses that candidate, applies the tags and keeps the existing profile fields. */
+        CreateApplicationCandidate: {
+            /**
+             * @description First name
+             * @example Ada
+             */
+            firstName: string;
+            /**
+             * @description Last name
+             * @example Lovelace
+             */
+            lastName: string;
+            /**
+             * Format: email
+             * @description Email address
+             * @example ada@example.com
+             */
+            email: string;
+            /**
+             * @description Phone number
+             * @example +49 30 123456
+             */
+            phoneNumber?: string;
+            /**
+             * @description Country of residence as an ISO 3166-1 alpha-2 code
+             * @example DE
+             */
+            countryCode?: string;
+            /**
+             * @description Tag names to apply to the candidate. Unknown names are created in your company’s tag catalog
+             * @example [
+             *       "Senior"
+             *     ]
+             */
+            tags?: string[];
+        };
+        /** @description A document to attach to an application. The decoded size must not exceed 10 MB. Accepted formats are PDF, Word, JPEG and PNG; supported document types are `CV` and `COVER_LETTER`. */
+        CreateApplicationDocument: {
+            type: components["schemas"]["DocumentType"];
+            /**
+             * @description The file, base64-encoded. Maximum 10 MB decoded. Invalid encoding or an unsupported file type returns a `validation_error` identifying the document.
+             * @example JVBERi0xLjQKJeLjz9M=
+             */
+            data: string;
+            /**
+             * @description File name including its extension
+             * @example cv.pdf
+             */
+            name: string;
+        };
+        /** @description Creates and publishes a job. `ONLINE` posts it to job boards; `OFFLINE` keeps it internal for direct sourcing, without multiposting. Both run the same publish validation and both count toward the active-job limit. */
+        CreateJob: {
+            status?: components["schemas"]["CreateJobStatus"];
+            /**
+             * @description Job title, 3–100 characters
+             * @example Senior Backend Engineer
              */
             title: string;
             /**
-             * @description description of the job (in html)
-             * @example <p>A job description summarizes the essential responsibilities, activities, qualifications and skills for a role. Also known as a JD, this document describes the type of work performed.</p><p>A job description should include important company details — company mission, culture and any benefits it provides to employees. It may also specify to whom the position reports and salary range.</p><p>An effective job description will provide enough detail for candidates to determine if they’re qualified for the position. Not only that, but according to an Indeed survey, 52% of job seekers say the quality of a job description is very or extremely influential on their decision to apply for a job.</p>
+             * @description Job description as HTML. The visible text must be 200–10,000 characters; HTML markup does not count toward the limit. Allowed tags: `<p>`, `<br>`, `<strong>`, `<em>`, `<ul>`, `<ol>`, `<li>`, `<h2>` and `<h3>`, without attributes. Any other tag, links included, is removed and its text kept; scripts and embedded content are removed entirely.
+             * @example <p>Help our engineering team build and maintain recruiting software. You will design reliable services, review code with colleagues, investigate production issues and improve the experience of our customers. We value clear communication, thoughtful testing and practical problem solving.</p>
              */
             description: string;
-            /** @description salary range information */
-            salary?: {
+            /** @description The language the ad is written in. Defaults to your company’s */
+            languageCode?: components["schemas"]["LanguageCode"];
+            /**
+             * @description How urgently the role needs filling
+             * @default NORMAL
+             */
+            priority: components["schemas"]["JobPriority"];
+            /**
+             * @description Positions to fill. Omitted, 1
+             * @default 1
+             * @example 2
+             */
+            openings: number;
+            workLocation: components["schemas"]["WorkLocationInput"];
+            /**
+             * @description Contract type ID from [List contract types](listcontracttypes). This determines the job’s employment type.
+             * @example 12
+             */
+            contractTypeId: number;
+            /** @description Contract terms, each optional. An omitted or `null` term stays empty: JOIN applies no default. Each value is validated against the contract type’s bounds. */
+            employmentTerms?: {
                 /**
-                 * @description payment frequency, can be one of the following: HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY
-                 * @enum {string}
+                 * @description Within the contract type’s minimum and maximum
+                 * @example 40
                  */
-                frequency: "PER_HOUR" | "PER_WEEK" | "PER_MONTH" | "PER_YEAR" | "PER_DAY";
+                weeklyWorkingHours?: number | null;
                 /**
-                 * @description lower limit of the salary range
-                 * @example 50000
+                 * @description Refused when the contract type has unlimited duration
+                 * @example 12
                  */
-                from?: number;
+                durationMonths?: number | null;
                 /**
-                 * @description higher limit of the salary range
-                 * @example 60000
+                 * @description Refused when the contract type has no probation
+                 * @example 6
                  */
-                to?: number;
+                probationMonths?: number | null;
                 /**
-                 * @description currency of the salary
-                 * @enum {string}
+                 * @description Refused when the contract type has no vacation
+                 * @example 30
                  */
-                currency: "EUR" | "CHF" | "USD" | "GBP";
+                annualVacationDays?: number | null;
                 /**
-                 * @description whether salary information is displayed on the job ad
-                 * @example true
+                 * Format: date
+                 * @description When the role starts, 30 or more days ahead. A nearer date is refused. `null` means as soon as possible
+                 * @example 2027-03-01
                  */
-                isShownOnJobAd?: boolean;
+                startDate?: string | null;
+            };
+            /** @description What the job pays. Omit the whole object for no salary, which keeps the salary `HIDDEN`. */
+            compensation?: {
+                /** @description The salary. Omit `to`, or send it equal to `from`, for a fixed salary. */
+                salary?: {
+                    /**
+                     * @description Lower bound, or the whole salary when `to` is omitted
+                     * @example 60000
+                     */
+                    from: number;
+                    /**
+                     * @description Upper bound. Omit, or send it equal to `from`, for a fixed salary
+                     * @example 80000
+                     */
+                    to?: number;
+                    /**
+                     * @description ISO 4217 currency code. Supply the currency explicitly.
+                     * @example EUR
+                     */
+                    currency: string;
+                    frequency: components["schemas"]["SalaryFrequency"];
+                };
+                /** @description Whether the salary is public. Omitted, it is `PUBLIC` with a salary and `HIDDEN` without one; `PUBLIC` requires a salary */
+                visibility?: components["schemas"]["SalaryVisibility"];
+            };
+            /** @description What the candidate is asked to provide. Replaced in full on write. Omitted on create, the form keeps `CV` required and carries no custom questions. */
+            applicationForm?: {
+                /** @description `CV` cannot be removed, though its `constraint` may be `OPTIONAL`. `COVER_LETTER` absent means the candidate is not asked for one */
+                documents?: components["schemas"]["ApplicationFormDocument"][];
+                /** @description Custom questions, at most 10. Plan-gated: a non-empty value on a plan below `ADVANCED` is refused with `custom_questions_not_in_plan` */
+                screeningQuestions?: {
+                    /**
+                     * @description Position among the custom questions, from 1
+                     * @example 1
+                     */
+                    order: number;
+                    /**
+                     * @description The prompt shown to the candidate
+                     * @example Do you have a work permit for Germany?
+                     */
+                    question: string;
+                    type: components["schemas"]["ScreeningQuestionType"];
+                    constraint: components["schemas"]["ScreeningQuestionConstraint"];
+                    /** @description Required for `SINGLE_CHOICE` and `MULTI_CHOICE`, refused for the other types */
+                    options?: components["schemas"]["ScreeningQuestionOption"][];
+                    /** @description Required when an `INTEGER`, `DATE` or `BOOLEAN` question is a knockout, refused otherwise */
+                    rejectIf?: components["schemas"]["ScreeningQuestionRejectIf"];
+                }[];
             };
             /**
-             * @description category id of the job (can only be one of sub categories)
-             * @example 123
+             * @description The pipeline template the job’s stages are created from; see `GET /pipeline-templates`. Defaults to your company’s default
+             * @example 77
              */
-            categoryId: number;
-            /**
-             * @description language code according to [iso 639-1](https://en.wikipedia.org/wiki/ISO_639-1)
-             * @example en
-             */
-            language: string;
-            /**
-             * @description id of the office you want to assign to this job. Please check offices endpoints for more details
-             * @example en
-             */
-            officeId: number;
-            /**
-             * @description employment type of the job
-             * @example 123
-             */
-            employmentTypeId: number;
-            /** @description contact person displayed on the job ad */
-            contact?: {
-                /**
-                 * @description name of the contact person
-                 * @example Erika Mustermann
-                 */
-                name?: string;
+            pipelineTemplateId?: number;
+            /** @description Who to invite. Omitted, nobody is invited. System Admins reach the job regardless */
+            hiringTeam?: {
                 /**
                  * Format: email
-                 * @description email of the contact person
-                 * @example erika@musterfrau.de
+                 * @description Must be a user in your company
+                 * @example alex.fischer@example.com
                  */
-                email?: string;
-                /**
-                 * @description position of the contact person
-                 * @example Recruiter
-                 */
-                position?: string;
-            };
-            /**
-             * @description seniority id of the job
-             * @example 123
-             */
-            seniorityId?: number;
+                email: string;
+                role: components["schemas"]["AssignableHiringTeamRole"];
+            }[];
             /**
              * Format: email
-             * @description contact person displayed on the job ad
-             * @example john.doe@email.com
+             * @description Company member shown on the public ad
+             * @example alex.fischer@example.com
              */
-            contactPerson?: string;
+            contactPersonEmail?: string;
             /**
-             * @description remote type of the job
-             * @enum {string}
+             * @description Your own reference for the job. Multiple jobs can share this value; the `externalId` filter returns all matches. Shown in the product as *Internal Job ID*
+             * @example ATS-4711
              */
-            workplaceType?: "ONSITE" | "REMOTE" | "HYBRID";
-            /**
-             * @description type of remote option (only if workplaceType REMOTE): remote from anywhere or remote within country of office
-             * @example ANYWHERE
-             * @enum {string}
-             */
-            remoteType?: "ANYWHERE" | "COUNTRY";
-            /**
-             * @description candidate cv
-             * @example REQUIRED
-             * @enum {string}
-             */
-            cv?: "REQUIRED" | "OPTIONAL" | "OFF";
-            /**
-             * @description candidate cover letter
-             * @example REQUIRED
-             * @enum {string}
-             */
-            coverLetter?: "REQUIRED" | "OPTIONAL" | "OFF";
-            /** @description Screening questions */
-            questions?: components["schemas"]["Questions"][];
-            /** @description Hiring team */
-            hiringTeam?: components["schemas"]["HiringTeam"][];
-            /**
-             * @description status of the job
-             * @enum {string}
-             */
-            status?: "ONLINE" | "OFFLINE";
+            externalId?: string;
         };
-        CreateOffice: {
+        /**
+         * @description Status a job is created with. `ARCHIVED` is not valid on create — archive an existing job with `PATCH`. Both values run the same publish validation and both count toward the active-job limit.
+         * @default ONLINE
+         * @example ONLINE
+         * @enum {string}
+         */
+        CreateJobStatus: "ONLINE" | "OFFLINE";
+        CreateLocation: {
             /**
-             * @description country code according to [iso-3166-1-alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
-             * @example DE
-             */
-            countryIso: string;
-            /**
-             * @description name of the office
+             * @description Location name
              * @example Berlin Office
              */
             name?: string;
+            address: components["schemas"]["LocationAddressInput"];
             /**
-             * @description City where the office is located
+             * @description Official establishment registration number (e.g. SIRET in France); only for countries that use one
+             * @example 12345678901234
+             */
+            establishmentId?: string;
+            /**
+             * @description Whether this is the default location preselected for job ads
+             * @default false
+             * @example true
+             */
+            isDefault: boolean;
+        };
+        /** @description A note created through the API has no author and is always visible to your whole company. */
+        CreateNote: {
+            /**
+             * @description The note text
+             * @example Strong systems background.
+             */
+            content: string;
+        };
+        /**
+         * @description Whether the candidate must attach the document.
+         * @example REQUIRED
+         * @enum {string}
+         */
+        DocumentConstraint: "REQUIRED" | "OPTIONAL";
+        /**
+         * @description Type of document attached to an application. This revision accepts and returns `CV` and `COVER_LETTER`.
+         * @example CV
+         * @enum {string}
+         */
+        DocumentType: "CV" | "COVER_LETTER";
+        /** @description Contract terms. Each is bounded by the contract type, and is `null` when it is not set. */
+        EmploymentTerms: {
+            /**
+             * @description Weekly hours, within the contract type’s minimum and maximum
+             * @example 40
+             */
+            weeklyWorkingHours?: number | null;
+            /**
+             * @description Contract length. `null` when the contract type has unlimited duration
+             * @example 12
+             */
+            durationMonths?: number | null;
+            /**
+             * @description Probation length. `null` when the contract type has no probation
+             * @example 6
+             */
+            probationMonths?: number | null;
+            /**
+             * @description Paid vacation days per year. `null` when the contract type has no vacation
+             * @example 30
+             */
+            annualVacationDays?: number | null;
+            /**
+             * Format: date
+             * @description When the role starts, 30 or more days ahead. `null` when it starts as soon as possible
+             * @example 2027-03-01
+             */
+            startDate?: string | null;
+        };
+        /** @description The employment category determined by a job’s contract type. */
+        EmploymentType: {
+            /**
+             * @description Unique identifier
+             * @example 3
+             */
+            id: number;
+            /**
+             * @description Display name
+             * @example Full-time
+             */
+            name: string;
+            /**
+             * @description Slug; the value the `employmentType` job filter takes
+             * @example full-time
+             */
+            slug: string;
+        };
+        /** @description All matching records, returned together in `data`. */
+        EmploymentTypesList: {
+            /** @description The array of records */
+            data: components["schemas"]["EmploymentType"][];
+        };
+        /** @description Standard error envelope. Every 4xx and 5xx response has this shape. `error.code` is a stable, machine-readable identifier; `error.message` is a human-readable explanation not meant to be shown to end users. */
+        Error: {
+            error: {
+                /**
+                 * @description Stable machine-readable error code.
+                 * @example location_not_found
+                 */
+                code: string;
+                /**
+                 * @description Human-readable explanation of the error.
+                 * @example Location not found
+                 */
+                message: string;
+            };
+        };
+        /** @description A single field-level reason a request was rejected. */
+        FieldError: {
+            /**
+             * @description Dotted path of the offending field, as sent in the request (e.g. `address.city`). `body` when the whole payload is at fault.
+             * @example address.postalCode
+             */
+            field: string;
+            /**
+             * @description Where the offending field was sent: the request `body`, a `query` parameter or a `path` parameter.
+             * @example body
+             * @enum {string}
+             */
+            in: "body" | "query" | "path";
+            /**
+             * @description Human-readable reason this field was rejected.
+             * @example Invalid postal code
+             */
+            message: string;
+        };
+        /** @description Named in-office days. Seven days is not hybrid — send `workplaceType: ONSITE`. */
+        FixedHybridScheduleInput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "FIXED";
+            /**
+             * @description The named in-office days
+             * @example [
+             *       "MON",
+             *       "WED"
+             *     ]
+             */
+            fixedWeeklyDays: components["schemas"]["WeekDay"][];
+        };
+        /** @description A number of in-office days per week. */
+        FlexibleHybridScheduleInput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "FLEXIBLE";
+            /**
+             * @description Days per week in the office
+             * @example 3
+             */
+            weeklyInOfficeDays: number;
+        };
+        /** @description A person who can access this job. */
+        HiringTeamMember: {
+            user: components["schemas"]["HiringTeamUser"];
+            role: components["schemas"]["HiringTeamRole"];
+        };
+        /**
+         * @description A member’s role on this job. `SYSTEM_ADMIN` is held through a company role rather than assigned to the job, so it is read-only.
+         * @example HIRING_MANAGER
+         * @enum {string}
+         */
+        HiringTeamRole: "SYSTEM_ADMIN" | "ADMIN" | "HIRING_MANAGER" | "REVIEWER";
+        /** @description A company user on the hiring team. */
+        HiringTeamUser: {
+            /**
+             * @description Full name
+             * @example Alex Fischer
+             */
+            name: string;
+            /**
+             * Format: email
+             * @description The company user’s email address. Use this address when assigning a hiring-team member.
+             * @example alex.fischer@example.com
+             */
+            email: string;
+        };
+        /** @description The in-office schedule of a hybrid job. Seven in-office days is not hybrid — send `workplaceType: ONSITE` instead. */
+        HybridSchedule: {
+            type: components["schemas"]["HybridScheduleType"];
+            /**
+             * @description Days per week in the office. Only when `type` is `FLEXIBLE`
+             * @example 3
+             */
+            weeklyInOfficeDays?: number | null;
+            /**
+             * @description The named in-office days. Only when `type` is `FIXED`
+             * @example [
+             *       "MON",
+             *       "WED"
+             *     ]
+             */
+            fixedWeeklyDays?: components["schemas"]["WeekDay"][] | null;
+        };
+        /** @description The in-office schedule of a hybrid job: `weeklyInOfficeDays` for `FLEXIBLE`, `fixedWeeklyDays` for `FIXED`. Optional: a hybrid job without one reads `hybridSchedule: null`. */
+        HybridScheduleInput: components["schemas"]["FlexibleHybridScheduleInput"] | components["schemas"]["FixedHybridScheduleInput"];
+        /**
+         * @description How the in-office days of a hybrid job are set. `FLEXIBLE` counts days per week, `FIXED` names them.
+         * @example FLEXIBLE
+         * @enum {string}
+         */
+        HybridScheduleType: "FLEXIBLE" | "FIXED";
+        /** @description Split between a location and home. */
+        HybridWorkLocationInput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            workplaceType: "HYBRID";
+            /**
+             * @description The location; see `GET /locations`
+             * @example 1234
+             */
+            locationId: number;
+            hybridSchedule?: components["schemas"]["HybridScheduleInput"];
+        };
+        /** @description A published job. Drafts are never returned. */
+        Job: {
+            /**
+             * @description Unique identifier
+             * @example 4321
+             */
+            id: number;
+            status: components["schemas"]["JobStatus"];
+            /**
+             * @description Job title, 3–100 characters
+             * @example Senior Backend Engineer
+             */
+            title: string;
+            /**
+             * @description Job description as HTML. Never `null`
+             * @example <p>Help our engineering team build and maintain recruiting software. You will design reliable services, review code with colleagues, investigate production issues and improve the experience of our customers. We value clear communication, thoughtful testing and practical problem solving.</p>
+             */
+            description: string;
+            languageCode: components["schemas"]["LanguageCode"];
+            priority: components["schemas"]["JobPriority"];
+            /**
+             * @description Positions to fill, at least 1. Decremented by one each time a candidate is marked hired, while it is above 1
+             * @example 2
+             */
+            openings: number;
+            /**
+             * @description Your own reference for the job. Multiple jobs can share this value; the `externalId` filter returns all matches. Shown in the product as *Internal Job ID*
+             * @example ATS-4711
+             */
+            externalId: string | null;
+            /**
+             * @description Public job ad URL; `null` when there is no live listing. The URL is refreshed roughly every 30 days. Use the job’s `id` as its stable identifier.
+             * @example https://join.com/companies/example/4321-senior-backend-engineer
+             */
+            url: string | null;
+            /** @description Read-only; follows from the contract type */
+            employmentType: components["schemas"]["EmploymentType"] | null;
+            /** @description Set with `contractTypeId` */
+            contractType: components["schemas"]["JobContractType"] | null;
+            /** @description Contract terms */
+            employmentTerms: components["schemas"]["EmploymentTerms"] | null;
+            workLocation: components["schemas"]["WorkLocation"];
+            compensation: components["schemas"]["Compensation"];
+            applicationForm: components["schemas"]["ApplicationForm"];
+            /** @description Everyone who can access this job, including company System Admins. Changes to company roles can also change this list. */
+            hiringTeam: components["schemas"]["HiringTeamMember"][];
+            /** @description The person shown on the public ad */
+            contactPerson: components["schemas"]["ContactPerson"] | null;
+            /** @description The job’s hiring stages in ascending `order`, starting with `APPLIED`. Their IDs are what `PUT /applications/{id}/stage` accepts */
+            stages: components["schemas"]["PipelineStage"][];
+            /**
+             * Format: date-time
+             * @description Creation time
+             * @example 2026-09-01T10:15:00.000Z
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update time
+             * @example 2026-09-14T08:00:00.000Z
+             */
+            updatedAt: string;
+        };
+        /** @description The contract type a job is assigned. Set with `contractTypeId`. */
+        JobContractType: {
+            /**
+             * @description Identifier; see `GET /contract-types`
+             * @example 12
+             */
+            id: number;
+            /**
+             * @description Display name
+             * @example Permanent employment
+             */
+            name: string;
+        };
+        /** @description Single-job responses wrap the job under `data`. */
+        JobEnvelope: {
+            data: components["schemas"]["Job"];
+        };
+        /** @description The location a job is performed at. Only for `ONSITE` and `HYBRID` jobs. */
+        JobLocation: {
+            /**
+             * @description Identifier; see `GET /locations`
+             * @example 1234
+             */
+            id: number;
+            /**
+             * @description Location name
+             * @example Berlin Office
+             */
+            name: string;
+            /**
+             * @description City
              * @example Berlin
              */
             city: string;
             /**
-             * @description Name of the street where the office is located
-             * @example Frankfurter Allee
+             * @description ISO 3166-1 alpha-2 country code
+             * @example DE
+             */
+            countryCode: string;
+        };
+        /**
+         * @description How urgently the role needs filling.
+         * @example NORMAL
+         * @enum {string}
+         */
+        JobPriority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+        /** @description Cursors are opaque — pass them back as-is and do not parse or construct them. */
+        JobsPage: {
+            /** @description The array of records */
+            data: components["schemas"]["Job"][];
+            /** @description The cursor to pass on the next request. `null` when there are no more records */
+            nextCursor: string | null;
+        };
+        /**
+         * @description Lifecycle status of a job. Drafts are not published on `/v3` and never appear here.
+         * @example ONLINE
+         * @enum {string}
+         */
+        JobStatus: "ONLINE" | "OFFLINE" | "ARCHIVED";
+        /**
+         * @description The language of the job ad. Use the Accept-Language header to select the language of supported display names in the response.
+         * @example de
+         * @enum {string}
+         */
+        LanguageCode: "nl" | "en" | "fr" | "de" | "it" | "es";
+        Location: {
+            /**
+             * @description Unique identifier
+             * @example 1234
+             */
+            id: number;
+            /**
+             * @description Location name
+             * @example Berlin Office
+             */
+            name: string | null;
+            address: components["schemas"]["LocationAddress"];
+            /**
+             * @description Official establishment registration number for the location's country (e.g. SIRET in France, 14 digits). `null` when not set or not applicable
+             * @example 12345678901234
+             */
+            establishmentId: string | null;
+            /**
+             * @description Whether this is the default location preselected for job ads
+             * @example true
+             */
+            isDefault: boolean;
+        };
+        /** @description Location address */
+        LocationAddress: {
+            /**
+             * @description Country code
+             * @example DE
+             */
+            countryCode: string;
+            /**
+             * @description City the location is in
+             * @example Berlin
+             */
+            city: string;
+            /**
+             * @description Street name
+             * @example Torstraße
+             */
+            streetName: string | null;
+            /**
+             * @description Street number
+             * @example 1
+             */
+            streetNumber: string | null;
+            /**
+             * @description Postal code; validated against `countryCode`
+             * @example 10119
+             */
+            postalCode: string | null;
+        };
+        /** @description Location address */
+        LocationAddressInput: {
+            /**
+             * @description Country code
+             * @example DE
+             */
+            countryCode: string;
+            /**
+             * @description City the location is in
+             * @example Berlin
+             */
+            city: string;
+            /**
+             * @description Street name
+             * @example Torstraße
              */
             streetName?: string;
             /**
-             * @description The number on the street of office
-             * @example 46
+             * @description Street number
+             * @example 1
              */
             streetNumber?: string;
             /**
-             * @description Office postal code
-             * @example 11234
+             * @description Postal code; validated against `countryCode`
+             * @example 10119
              */
             postalCode?: string;
-            /**
-             * @description Whether this is the default preselected office for the job ads.
-             *     Note: only one office can be a default at a time.
-             * @example true
-             */
-            isDefault?: boolean;
         };
-        EmploymentType: {
-            /**
-             * @description id of the employment type
-             * @example 1234
-             */
-            id?: number;
-            /**
-             * @description Employment type slug
-             * @example internship
-             */
-            slug?: string;
-            /**
-             * @description Employment type name
-             * @example Internship
-             */
-            name?: string;
+        /** @description Single-location responses wrap the location under `data`. */
+        LocationEnvelope: {
+            data: components["schemas"]["Location"];
         };
-        Error: {
-            error?: {
-                /** @example Error type */
-                type?: string;
-                /** @example Error message */
-                message?: string;
-            };
-        };
-        HiringTeam: {
-            /**
-             * @description hiring team member email
-             * @example john@doe.com
-             */
-            hiringTeamMember: string;
-            /**
-             * @description type of job role
-             * @example hiring_manager
-             * @enum {string}
-             */
-            jobRole: "admin" | "hiring_manager" | "reviewer";
-        };
-        Job: {
-            /**
-             * @description id of the job
-             * @example 1234
-             */
-            id?: number;
-            /**
-             * Format: date-time
-             * @description creation time of the job
-             * @example 2020-01-01T00:00:00.000Z
-             */
-            createdAt?: string;
-            /**
-             * Format: date-time
-             * @description update time of the job
-             * @example 2020-01-01T00:00:00.000Z
-             */
-            lastUpdatedAt?: string;
-            /**
-             * @description description of the job (in html, only returned if content is set to true as query parameter)
-             * @example <p>A job description summarizes the essential responsibilities, activities, qualifications and skills for a role. Also known as a JD, this document describes the type of work performed.</p><p>A job description should include important company details — company mission, culture and any benefits it provides to employees. It may also specify to whom the position reports and salary range.</p><p>An effective job description will provide enough detail for candidates to determine if they’re qualified for the position. Not only that, but according to an Indeed survey, 52% of job seekers say the quality of a job description is very or extremely influential on their decision to apply for a job.</p>
-             */
-            description?: string;
-            /**
-             * @description id used to identify the job outside Join
-             * @example 1234abcd
-             */
-            externalId?: string;
-            /**
-             * @description title of the job
-             * @example Senior Recruiter (m/w/d)
-             */
-            title?: string;
-            /**
-             * @description indicates the status of the job, can either be ONLINE | OFFLINE | ARCHIVED
-             * @example ONLINE
-             */
-            status?: string;
-            /**
-             * @deprecated
-             * @description whether the job can be performed remotely
-             * @example true
-             */
-            remote?: boolean;
-            /** @description the office location where the position if offered */
-            office?: components["schemas"]["Office"];
-            /** @description salary range information (only returned if content is set to true as query parameter) */
-            salary?: {
-                /**
-                 * @description lower limit of the salary range
-                 * @example 50000
-                 */
-                from?: number;
-                /**
-                 * @description higher limit of the salary range
-                 * @example 60000
-                 */
-                to?: number;
-                /**
-                 * @description currency of the salary
-                 * @example EUR
-                 */
-                currency?: string;
-                /**
-                 * @description whether salary information is displayed on the job ad
-                 * @example true
-                 */
-                isShownOnJobAd?: boolean;
-                /**
-                 * @description payment frequency, can be one of the following: HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY
-                 * @example YEARLY
-                 */
-                frequency?: string;
-            };
-            /** @description contact person displayed on the job ad (only returned if content is set to true as query parameter) */
-            contact?: {
-                /**
-                 * @description name of the contact person
-                 * @example Erika Mustermann
-                 */
-                name?: string;
-                /**
-                 * @description email of the contact person
-                 * @example erika@musterfrau.de
-                 */
-                email?: string;
-                /**
-                 * @description position of the contact person
-                 * @example Recruiter
-                 */
-                position?: string;
-            };
-            /**
-             * Format: email
-             * @description contact person displayed on the job ad (only returned if content is set to true as query parameter)
-             * @example john.doe@email.com
-             */
-            contactPerson?: string;
-            /** @description configuration of which attachements candidates can upload when applying (only returned if content is set to true as query parameter) */
-            attachments?: {
-                /**
-                 * @description attachment type
-                 * @example CV
-                 */
-                type?: string;
-                /**
-                 * @description constraint of the attachment, one of REQUIRED, OPTIONAL or HIDDEN
-                 * @example REQUIRED
-                 */
-                constraint?: string;
-            }[];
-            /**
-             * @description constraint of the cv when candidates apply to the job
-             * @enum {string}
-             */
-            cv?: "REQUIRED" | "OPTIONAL" | "OFF";
-            /**
-             * @description constraint of the cover letter when candidates apply to the job
-             * @enum {string}
-             */
-            coverLetter?: "REQUIRED" | "OPTIONAL" | "OFF";
-            /**
-             * @description employment type id of the job (only returned if content is set to true as query parameter)
-             * @example 123
-             */
-            employmentTypeId?: number;
-            /**
-             * @description category id of the job (only returned if content is set to true as query parameter)
-             * @example 123
-             */
-            categoryId?: number;
-            /**
-             * @description seniority id required for the job (only returned if content is set to true as query parameter)
-             * @example 123
-             */
-            seniorityId?: number;
-            /**
-             * @description language code according to [iso 639-1](https://en.wikipedia.org/wiki/ISO_639-1) (only returned if content is set to true as query parameter)
-             * @example en
-             */
-            language?: string;
-            /**
-             * @deprecated
-             * @description Array of followers that receive email notifications when new candidates apply (only returned if content is set to true as query parameter). Deprecated: please use Hiring Team instead.
-             */
-            followers?: string[];
-            /**
-             * @description remote type of the job
-             * @example ONSITE
-             */
-            workplaceType?: string;
-            /**
-             * @description type of remote option (only if workplaceType REMOTE)
-             * @example ANYWHERE
-             */
-            remoteType?: string;
-            /** @description Job Screening Questions */
-            questions?: components["schemas"]["ScreeningQuestion"][];
-            /** @description array of hiring team users */
-            hiringTeam?: components["schemas"]["HiringTeam"][];
-        };
-        JobId: {
-            /**
-             * @description id of the job
-             * @example 1234
-             */
-            id?: number;
+        /** @description Cursors are opaque — pass them back as-is and do not parse or construct them. */
+        LocationsPage: {
+            /** @description The array of records */
+            data: components["schemas"]["Location"][];
+            /** @description The cursor to pass on the next request. `null` when there are no more records */
+            nextCursor: string | null;
         };
         Note: {
             /**
-             * @description id of the candidate note
-             * @example 1234
+             * @description Unique identifier
+             * @example 5521
              */
-            id?: number;
+            id: number;
             /**
-             * @description email address of the user who created the note
-             * @example example@domain.com
+             * @description The text supplied when the note was created. New notes are limited to 2,500 characters; older notes retain their original length.
+             * @example Strong systems background.
              */
-            userEmail?: string;
+            content: string;
             /**
-             * @description content of the note
-             * @example test
+             * @description Whether the note is private between recruiters in JOIN. Company API tokens can read both private and shared notes. Notes created through the API have `isPrivate: false`.
+             * @example false
              */
-            content?: string;
-            /**
-             * Format: date-time
-             * @description creation time of the note
-             * @example 2020-01-01T00:00:00.000Z
-             */
-            createdAt?: string;
+            isPrivate: boolean;
+            /** @description Replies on this note, up to 150 */
+            replies: components["schemas"]["NoteReply"][];
             /**
              * Format: date-time
-             * @description update time of the note
-             * @example 2020-01-01T00:00:00.000Z
+             * @description When the note was created
+             * @example 2026-11-01T09:30:00.000Z
              */
-            lastUpdatedAt?: string;
+            createdAt: string;
             /**
-             * @description whether the note is private
-             * @example true
+             * Format: date-time
+             * @description When the note was last changed
+             * @example 2026-11-01T09:30:00.000Z
              */
-            isPrivate?: boolean;
-            replies?: components["schemas"]["ReplyNote"][];
+            updatedAt: string;
         };
-        Office: {
+        /** @description Single-note responses wrap the note under `data`. */
+        NoteEnvelope: {
+            data: components["schemas"]["Note"];
+        };
+        /** @description A reply on a candidate note. It shares the parent note’s privacy setting. */
+        NoteReply: {
             /**
-             * @description id of the office
+             * @description Unique identifier
+             * @example 5522
+             */
+            id: number;
+            /**
+             * @description The reply text
+             * @example Agreed — moving to interview.
+             */
+            content: string;
+            /**
+             * Format: date-time
+             * @description When the reply was created
+             * @example 2026-11-01T09:30:00.000Z
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description When the reply was last changed
+             * @example 2026-11-01T09:30:00.000Z
+             */
+            updatedAt: string;
+        };
+        /** @description Cursors are opaque — pass them back as-is and do not parse or construct them. */
+        NotesPage: {
+            /** @description The array of records */
+            data: components["schemas"]["Note"][];
+            /** @description The cursor to pass on the next request. `null` when there are no more records */
+            nextCursor: string | null;
+        };
+        /** @description On site at one of your locations. */
+        OnsiteWorkLocationInput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            workplaceType: "ONSITE";
+            /**
+             * @description The location; see `GET /locations`
              * @example 1234
              */
-            id?: number;
+            locationId: number;
+        };
+        /**
+         * @description The interviewer’s overall recommendation on a scorecard. `null` when they gave none.
+         * @example YES
+         * @enum {string|null}
+         */
+        OverallRecommendation: "DEFINITELY_NO" | "NO" | "YES" | "DEFINITELY_YES" | null;
+        /** @description A stage of a job’s hiring pipeline. */
+        PipelineStage: {
             /**
-             * @description name of the office
-             * @example Berlin Office
+             * @description Unique identifier — the value to send to the stage move
+             * @example 501
              */
-            name?: string;
+            id: number;
             /**
-             * @description country code according to [iso-3166-1-alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+             * @description Stage name as configured on the pipeline
+             * @example Phone screen
+             */
+            name: string;
+            type: components["schemas"]["PipelineStageType"];
+            /**
+             * @description Position in the pipeline, from 1
+             * @example 2
+             */
+            order: number;
+        };
+        /**
+         * @description Type of a pipeline stage. Every pipeline starts with an `APPLIED` stage, where new applications arrive and where an application rejected by a knockout question stays.
+         * @example SCREENING
+         * @enum {string}
+         */
+        PipelineStageType: "APPLIED" | "APPLICATION_REVIEW" | "SCREENING" | "PHONE_CALL" | "ASSESSMENT" | "CASE_STUDY" | "INTERVIEW" | "OFFER" | "HIRED";
+        /** @description A pipeline template: the stages a job gets when it is created from it. */
+        PipelineTemplate: {
+            /**
+             * @description Unique identifier
+             * @example 77
+             */
+            id: number;
+            /**
+             * @description Pipeline template name
+             * @example Engineering pipeline
+             */
+            name: string;
+            /** @description The stages in ascending `order`, starting with the `APPLIED` stage */
+            stages: components["schemas"]["PipelineStage"][];
+        };
+        /** @description A cursor page of pipeline templates. Cursors are opaque — pass them back as-is and do not parse or construct them. Each template carries its stages inline. */
+        PipelineTemplatesList: {
+            /** @description The array of records */
+            data: components["schemas"]["PipelineTemplate"][];
+            /** @description The cursor to pass on the next request. `null` when there are no more records */
+            nextCursor: string | null;
+        };
+        /** @description A link from the candidate’s talent profile. */
+        ProfessionalLink: {
+            type: components["schemas"]["ProfessionalLinkType"];
+            /**
+             * @description The link
+             * @example https://www.linkedin.com/in/example
+             */
+            url: string;
+        };
+        /**
+         * @description Kind of professional link on a candidate’s profile.
+         * @example LINKEDIN
+         * @enum {string}
+         */
+        ProfessionalLinkType: "LINKEDIN" | "PERSONAL_WEBSITE" | "PORTFOLIO" | "BEHANCE" | "GITHUB" | "XING";
+        /**
+         * @description Which side of `value` rejects. `GREATER_THAN` reads as *larger than* for a number and *later than* for a date. `EQUAL_TO` is for a `BOOLEAN` question and rejects that exact answer.
+         * @example GREATER_THAN
+         * @enum {string}
+         */
+        RejectIfComparator: "GREATER_THAN" | "LESS_THAN" | "EQUAL_TO";
+        /** @description Remote with no geographic restriction. */
+        RemoteAnywhereWorkLocationInput: {
+            /** @enum {string} */
+            workplaceType: "REMOTE";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            remoteType: "ANYWHERE";
+        };
+        /** @description Remote within exactly one country. */
+        RemoteCountryWorkLocationInput: {
+            /** @enum {string} */
+            workplaceType: "REMOTE";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            remoteType: "COUNTRY";
+            /**
+             * @description ISO 3166-1 alpha-2 country code
              * @example DE
              */
-            countryIso?: string;
-            /**
-             * @description City where the office is located
-             * @example Berlin
-             */
-            city?: string;
-            /**
-             * @description Name of the street where the office is located
-             * @example Frankfurter Allee
-             */
-            streetName?: string;
-            /**
-             * @description The number on the street of office
-             * @example 46
-             */
-            streetNumber?: string;
-            /**
-             * @description Office postal code
-             * @example 11234
-             */
-            postalCode?: string;
-            /**
-             * @description Whether this is the default preselected office for the job ads
-             * @example true
-             */
-            isDefault?: boolean;
+            countryCode: string;
         };
-        OfficeId: {
+        /** @description A region a remote job may be scoped to. */
+        RemoteRegion: {
             /**
-             * @description id of the office
-             * @example 12
+             * @description Unique identifier
+             * @example 5
              */
-            id?: number;
-        };
-        Questions: {
+            id: number;
             /**
-             * @description screening question
-             * @example What is your current experience?
+             * @description Display name
+             * @example European Union
              */
             name: string;
             /**
-             * @description type of the document to be provided
-             * @enum {string}
+             * @description Short code
+             * @example EU
              */
-            type: "TEXT" | "BOOLEAN" | "INTEGER" | "DATE" | "SINGLE_CHOICE" | "MULTI_CHOICE" | "FILE";
+            code: string | null;
             /**
-             * @description constraint on the obligation to provide the document
+             * @description ISO 3166-1 alpha-2 codes of the countries in the region
              * @example [
-             *       "Option 1",
-             *       "Option 2"
+             *       "DE",
+             *       "FR",
+             *       "NL"
              *     ]
              */
-            options?: string[];
-            /**
-             * @description set question as required
-             * @example true
-             */
-            required: boolean;
-            oneOf?: {
-                /** @enum {string} */
-                type?: "SINGLE_CHOICE" | "MULTI_CHOICE";
-                options: string[];
-            };
+            countryCodes: string[];
         };
-        ReplyNote: {
-            /**
-             * @description email address of the user who created the reply note
-             * @example example@domain.com
-             */
-            userEmail?: string;
-            /**
-             * @description content of the reply note
-             * @example test
-             */
-            content?: string;
-            /**
-             * Format: date-time
-             * @description creation time of the reply note
-             * @example 2020-01-01T00:00:00.000Z
-             */
-            createdAt?: string;
-            /**
-             * Format: date-time
-             * @description update time of the reply note
-             * @example 2020-01-01T00:00:00.000Z
-             */
-            lastUpdatedAt?: string;
+        /** @description All matching records, returned together in `data`. */
+        RemoteRegionsList: {
+            /** @description The array of records */
+            data: components["schemas"]["RemoteRegion"][];
         };
-        Scorecard: {
+        /** @description Remote within exactly one region. */
+        RemoteRegionWorkLocationInput: {
+            /** @enum {string} */
+            workplaceType: "REMOTE";
             /**
-             * @description Id of the scorecard
-             * @example 123
-             */
-            id?: number;
-            submittedBy?: {
-                /** @example 456 */
-                userId?: number;
-                /** @example John */
-                firstName?: string;
-                /** @example Doe */
-                lastName?: string;
-                /** @example john.doe@company.com */
-                email?: string;
-            };
-            /**
-             * @description Overall recommendation score
-             * @example 4
-             */
-            overAllRecommendation?: number;
-            /**
-             * @description Overall impression text
-             * @example Strong candidate
-             */
-            overAllImpression?: string;
-            /**
-             * Format: date-time
-             * @description Date when the scorecard was submitted
-             * @example 2024-01-15T10:30:00Z
-             */
-            dateOfSubmission?: string;
-            /**
-             * Format: date-time
-             * @description Date when the scorecard was created
-             * @example 2024-01-15T10:30:00Z
-             */
-            createdAt?: string;
-            /**
-             * Format: date-time
-             * @description Date when the scorecard was last updated
-             * @example 2024-01-15T10:30:00Z
-             */
-            updatedAt?: string;
-            attributes?: components["schemas"]["ScorecardAttribute"][];
-            questions?: components["schemas"]["ScorecardQuestion"][];
-        };
-        ScorecardAttribute: {
-            /**
-             * @description Name of the attribute
-             * @example Communication
-             */
-            name?: string;
-            /**
-             * @description Score value for the attribute
-             * @example 4
-             */
-            rating?: number;
-        };
-        ScorecardQuestion: {
-            /**
-             * @description Id of the question
-             * @example 1
-             */
-            id?: number;
-            /**
-             * @description The question text
-             * @example How does the candidate handle pressure?
-             */
-            question?: string;
-            /**
-             * @description The interviewer's answer
-             * @example Very well
-             */
-            answer?: string;
-        };
-        ScreeningQuestion: {
-            /**
-             * @description question id
-             * @example 12
-             */
-            id?: number;
-            /**
-             * @description question name
-             * @example What is your current proficiency in German?
-             */
-            name?: string;
-            /**
-             * @description type of the answer for this question
+             * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            type?: "TEXT" | "BOOLEAN" | "INTEGER" | "DATE" | "SINGLE_CHOICE" | "MULTI_CHOICE" | "FILE";
-            /** @description array of options allowed as answer when the question type is SINGLE_CHOICE or MULTI_CHOICE */
-            options?: string[];
-            /** @description when set to true makes the question required for the candidate */
-            required?: boolean;
+            remoteType: "REGION";
+            /**
+             * @description The region; see `GET /remote-regions`
+             * @example 5
+             */
+            remoteRegionId: number;
         };
-        Seniority: {
+        /**
+         * @description How widely a remote job is scoped. Only set when `workplaceType` is `REMOTE`.
+         * @example REGION
+         * @enum {string}
+         */
+        RemoteType: "ANYWHERE" | "COUNTRY" | "REGION";
+        /** @description Remote, scoped by `remoteType`. */
+        RemoteWorkLocationInput: {
             /**
-             * @description id of the seniority
-             * @example 1234
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
              */
-            id?: number;
+            workplaceType: "REMOTE";
+        } & (components["schemas"]["RemoteAnywhereWorkLocationInput"] | components["schemas"]["RemoteCountryWorkLocationInput"] | components["schemas"]["RemoteRegionWorkLocationInput"]);
+        /** @description A salary. A range has `from` below `to`; a fixed salary has `from` equal to `to`. */
+        Salary: {
             /**
-             * @description Seniority slug
-             * @example Senior level
+             * @description Lower bound, or the whole salary when it equals `to`
+             * @example 60000
              */
-            slug?: string;
+            from: number;
             /**
-             * @description Seniority name
-             * @example senior
+             * @description Upper bound, or the whole salary when it equals `from`
+             * @example 80000
              */
-            name?: string;
+            to: number;
+            /**
+             * @description ISO 4217 currency code
+             * @example EUR
+             */
+            currency: string;
+            frequency: components["schemas"]["SalaryFrequency"];
         };
-        SingleNote: {
+        /**
+         * @description The period a salary figure covers.
+         * @example YEARLY
+         * @enum {string}
+         */
+        SalaryFrequency: "YEARLY" | "MONTHLY" | "WEEKLY" | "DAILY" | "HOURLY";
+        /**
+         * @description Whether the salary is shown publicly. `HIDDEN` keeps it off the public ad and out of multiposting, and is refused where the job’s country mandates a public gross salary.
+         * @example PUBLIC
+         * @enum {string}
+         */
+        SalaryVisibility: "PUBLIC" | "HIDDEN";
+        /** @description Published interview feedback for a candidate. */
+        Scorecard: {
             /**
-             * @description id of the candidate note
-             * @example 1234
+             * @description Unique identifier
+             * @example 341
              */
-            id?: number;
+            id: number;
+            overallRecommendation: components["schemas"]["OverallRecommendation"];
             /**
-             * @description email address of the user who created the note
-             * @example example@domain.com
+             * @description The interviewer’s written impression; `null` when they gave none
+             * @example Strong hire for the platform team.
              */
-            userEmail?: string;
-            /**
-             * @description content of the note
-             * @example test
-             */
-            content?: string;
+            overallImpression: string | null;
             /**
              * Format: date-time
-             * @description creation time of the note
-             * @example 2020-01-01T00:00:00.000Z
+             * @description When the scorecard was published
+             * @example 2026-11-01T09:30:00.000Z
              */
-            createdAt?: string;
+            submittedAt: string;
+            /** @description The rated attributes */
+            attributes: components["schemas"]["ScorecardAttribute"][];
+            /** @description The questions in template order */
+            questions: components["schemas"]["ScorecardQuestion"][];
             /**
              * Format: date-time
-             * @description update time of the note
-             * @example 2020-01-01T00:00:00.000Z
+             * @description When the scorecard was created
+             * @example 2026-11-01T09:30:00.000Z
              */
-            lastUpdatedAt?: string;
+            createdAt: string;
             /**
-             * @description whether the note is private
+             * Format: date-time
+             * @description When the scorecard was last changed
+             * @example 2026-11-01T09:30:00.000Z
+             */
+            updatedAt: string;
+        };
+        /** @description One rated attribute on a scorecard. */
+        ScorecardAttribute: {
+            /**
+             * @description Attribute name from the scorecard template
+             * @example Communication
+             */
+            name: string;
+            rating: components["schemas"]["AttributeRating"];
+            /**
+             * @description The interviewer’s comment on this attribute; `null` when they gave none
+             * @example Explained trade-offs clearly.
+             */
+            comment: string | null;
+        };
+        /** @description One question on a scorecard, in template order. */
+        ScorecardQuestion: {
+            /**
+             * @description Unique identifier
+             * @example 61
+             */
+            id: number;
+            /**
+             * @description The question as it was asked
+             * @example How did they handle scale?
+             */
+            question: string;
+            /**
+             * @description The interviewer’s answer; `null` when unanswered
+             * @example Confidently
+             */
+            answer: string | null;
+        };
+        /** @description All published scorecards for the candidate, returned together in `data`. */
+        ScorecardsList: {
+            /** @description The array of records */
+            data: components["schemas"]["Scorecard"][];
+        };
+        /** @description A custom question on the application form. Editing a question’s `question`, `type` or `options` returns a new `id` and leaves the previous question attached to the applications that answered it. */
+        ScreeningQuestion: {
+            /**
+             * @description Identifier; read-only
+             * @example 901
+             */
+            id: number;
+            /**
+             * @description Position among the custom questions, from 1
+             * @example 1
+             */
+            order: number;
+            /**
+             * @description The prompt shown to the candidate
+             * @example Do you have a work permit for Germany?
+             */
+            question: string;
+            type: components["schemas"]["ScreeningQuestionType"];
+            constraint: components["schemas"]["ScreeningQuestionConstraint"];
+            /** @description The choices offered. Only for `SINGLE_CHOICE` and `MULTI_CHOICE` */
+            options?: components["schemas"]["ScreeningQuestionOption"][] | null;
+            /** @description The answer that rejects; `null` unless the question is an `INTEGER`, `DATE` or `BOOLEAN` knockout */
+            rejectIf?: components["schemas"]["ScreeningQuestionRejectIf"] | null;
+        };
+        /** @description A screening question on the job, with the candidate’s answer when there is one. Only the recruiter’s own questions are returned; JOIN’s built-in default questions are not. A question since removed from the job’s form is returned only when this candidate answered it. */
+        ScreeningQuestionAnswer: {
+            /**
+             * @description The question as it was asked
+             * @example How many years of Go?
+             */
+            question: string;
+            type: components["schemas"]["ScreeningQuestionType"];
+            /**
+             * @description The answer for the value-shaped types (`TEXT`, `BOOLEAN`, `INTEGER`, `DATE`); `null` otherwise
+             * @example 5
+             */
+            answer: string | null;
+            /**
+             * @description The chosen options for `SINGLE_CHOICE` and `MULTI_CHOICE`; `null` otherwise
+             * @example [
+             *       "Berlin"
+             *     ]
+             */
+            selectedOptions: string[] | null;
+            /** @description The uploaded file for a `FILE` question; `null` otherwise */
+            file: components["schemas"]["ScreeningQuestionFile"] | null;
+            /**
+             * @description Whether the question carries no answer from this candidate
+             * @example false
+             */
+            isSkipped: boolean;
+        };
+        /**
+         * @description How the candidate must answer. `KNOCKOUT` rejects the application on a disqualifying answer, and is refused on `TEXT` and `FILE`.
+         * @example REQUIRED
+         * @enum {string}
+         */
+        ScreeningQuestionConstraint: "REQUIRED" | "OPTIONAL" | "KNOCKOUT";
+        /** @description The file uploaded as the answer to a `FILE` question. */
+        ScreeningQuestionFile: {
+            /**
+             * @description File name including its extension
+             * @example portfolio.pdf
+             */
+            name: string;
+            /**
+             * @description Pre-signed download link, valid for 1 hour from the moment the response was generated
+             * @example https://storage.googleapis.com/join-application-files/...
+             */
+            url: string;
+        };
+        /** @description A choice offered for a screening question. On a knockout question at least one option must be accepted and at least one must reject. */
+        ScreeningQuestionOption: {
+            /**
+             * @description Shown to the candidate
+             * @example Bachelor
+             */
+            label: string;
+            /**
+             * @description `false` makes the option reject the application
              * @example true
              */
-            isPrivate?: boolean;
+            accepted: boolean;
         };
-        UpdateJob: {
+        /** @description The answer that rejects the application. Only for `INTEGER`, `DATE` and `BOOLEAN` questions. */
+        ScreeningQuestionRejectIf: {
+            comparator: components["schemas"]["RejectIfComparator"];
             /**
-             * @description id used to identify the job outside Join
-             * @example 1234abcd
+             * @description The threshold, matching the question’s type: an integer for `INTEGER`, an ISO 8601 date for `DATE`; for `BOOLEAN`, the answer that rejects, `true` or `false`, with `EQUAL_TO`
+             * @example 80000
+             */
+            value: number | string | boolean;
+        };
+        /**
+         * @description Shape of a screening question’s answer. `TEXT`, `BOOLEAN`, `INTEGER` and `DATE` fill `answer`; `SINGLE_CHOICE` and `MULTI_CHOICE` fill `selectedOptions`; `FILE` fills `file`.
+         * @example TEXT
+         * @enum {string}
+         */
+        ScreeningQuestionType: "TEXT" | "BOOLEAN" | "INTEGER" | "DATE" | "SINGLE_CHOICE" | "MULTI_CHOICE" | "FILE";
+        /** @description Where the application or candidate came from, as determined by JOIN. */
+        Source: {
+            /**
+             * @description Unique identifier
+             * @example 12
+             */
+            id: number;
+            /**
+             * @description Source name
+             * @example Imported
+             */
+            name: string;
+        };
+        /** @description Updates your external reference for an application. Omit `externalId` to leave it unchanged, or send `null` to clear it. Use [Move an application to a stage](updateapplicationstage) to change its stage. */
+        UpdateApplication: {
+            /**
+             * @description Your system’s reference for this application. Use a string of 1–50 characters containing at least one non-whitespace character, or `null` to clear it.
+             * @example ats-2026-0001
              */
             externalId?: string | null;
+        };
+        UpdateApplicationStage: {
             /**
-             * @description title of the job
-             * @example Senior Recruiter (m/w/d)
+             * @description ID of a stage from the job’s `stages`. Moving to the current stage leaves the application unchanged.
+             * @example 501
+             */
+            stageId: number;
+        };
+        /** @description Updates a job’s details, status, or both. Job fields, hiring-team assignments and status are saved together. Custom screening questions are updated separately and can remain changed if a later step fails. Omitted fields stay unchanged. Read the individual field rules for replacement, merging and clearing. If updates overlap, the last write determines the stored values. */
+        UpdateJob: {
+            /** @description Target status. Any direction among the three is allowed; a refusal is always `validation_error` or `job_limit_reached` */
+            status?: components["schemas"]["JobStatus"];
+            /**
+             * @description Job title, 3–100 characters
+             * @example Senior Backend Engineer
              */
             title?: string;
             /**
-             * @description id of the office you want to assign to this job. Please check offices endpoints for more details
-             * @example 100
-             */
-            officeId?: number;
-            /**
-             * @description description of the job (in html)
-             * @example <p>A job description summarizes the essential responsibilities, activities, qualifications and skills for a role. Also known as a JD, this document describes the type of work performed.</p><p>A job description should include important company details — company mission, culture and any benefits it provides to employees. It may also specify to whom the position reports and salary range.</p><p>An effective job description will provide enough detail for candidates to determine if they’re qualified for the position. Not only that, but according to an Indeed survey, 52% of job seekers say the quality of a job description is very or extremely influential on their decision to apply for a job.</p>
+             * @description Job description as HTML. The visible text must be 200–10,000 characters; HTML markup does not count toward the limit. Allowed tags: `<p>`, `<br>`, `<strong>`, `<em>`, `<ul>`, `<ol>`, `<li>`, `<h2>` and `<h3>`, without attributes. Any other tag, links included, is removed and its text kept; scripts and embedded content are removed entirely.
+             * @example <p>Help our engineering team build and maintain recruiting software. You will design reliable services, review code with colleagues, investigate production issues and improve the experience of our customers. We value clear communication, thoughtful testing and practical problem solving.</p>
              */
             description?: string;
-            /** @description salary range information */
-            salary?: {
+            /** @description The language of the job ad. Omit to keep the current language. */
+            languageCode?: components["schemas"]["LanguageCode"];
+            /** @description How urgently the role needs filling. It stays unchanged if this field is omitted */
+            priority?: components["schemas"]["JobPriority"];
+            /**
+             * @description Positions to fill
+             * @example 2
+             */
+            openings?: number;
+            workLocation?: components["schemas"]["WorkLocationInput"];
+            /**
+             * @description Contract type ID from [List contract types](listcontracttypes). This determines the job’s employment type.
+             * @example 12
+             */
+            contractTypeId?: number;
+            /** @description Contract terms. An omitted term stays as it is and a `null` term is cleared; `null` for the whole object clears every term. Each value is validated against the contract type’s bounds, and changing `contractTypeId` drops the stored terms the new contract type does not allow. */
+            employmentTerms?: {
                 /**
-                 * @description payment frequency, can be one of the following: HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY
-                 * @enum {string}
+                 * @description Within the contract type’s minimum and maximum
+                 * @example 40
                  */
-                frequency: "PER_HOUR" | "PER_WEEK" | "PER_MONTH" | "PER_YEAR" | "PER_DAY";
+                weeklyWorkingHours?: number | null;
                 /**
-                 * @description lower limit of the salary range
-                 * @example 50000
+                 * @description Refused when the contract type has unlimited duration
+                 * @example 12
                  */
-                from?: number;
+                durationMonths?: number | null;
                 /**
-                 * @description higher limit of the salary range
-                 * @example 60000
+                 * @description Refused when the contract type has no probation
+                 * @example 6
                  */
-                to?: number;
+                probationMonths?: number | null;
                 /**
-                 * @description currency of the salary
-                 * @enum {string}
+                 * @description Refused when the contract type has no vacation
+                 * @example 30
                  */
-                currency: "EUR" | "CHF" | "USD" | "GBP";
+                annualVacationDays?: number | null;
                 /**
-                 * @description whether salary information is displayed on the job ad
-                 * @example true
+                 * Format: date
+                 * @description When the role starts, 30 or more days ahead. A nearer date is refused. `null` means as soon as possible
+                 * @example 2027-03-01
                  */
-                isShownOnJobAd?: boolean;
+                startDate?: string | null;
             } | null;
-            /**
-             * @description category id of the job (can only be one of sub categories)
-             * @example 123
-             */
-            categoryId?: number;
-            /**
-             * @description language code according to [iso 639-1](https://en.wikipedia.org/wiki/ISO_639-1)
-             * @example en
-             */
-            language?: string;
-            /**
-             * @description employment type of the job
-             * @example 123
-             */
-            employmentTypeId?: number;
-            /** @description contact person displayed on the job ad */
-            contact?: {
-                /**
-                 * @description name of the contact person
-                 * @example Erika Mustermann
-                 */
-                name?: string;
+            /** @description What the job pays. Replaced in full when sent; omitted, it stays as it is. `null` removes the salary and keeps it `HIDDEN`. */
+            compensation?: {
+                /** @description The salary. Omit `to`, or send it equal to `from`, for a fixed salary. */
+                salary?: {
+                    /**
+                     * @description Lower bound, or the whole salary when `to` is omitted
+                     * @example 60000
+                     */
+                    from: number;
+                    /**
+                     * @description Upper bound. Omit, or send it equal to `from`, for a fixed salary
+                     * @example 80000
+                     */
+                    to?: number;
+                    /**
+                     * @description ISO 4217 currency code. Supply the currency explicitly.
+                     * @example EUR
+                     */
+                    currency: string;
+                    frequency: components["schemas"]["SalaryFrequency"];
+                };
+                /** @description Whether the salary is public. Omitted, it is `PUBLIC` with a salary and `HIDDEN` without one; `PUBLIC` requires a salary */
+                visibility?: components["schemas"]["SalaryVisibility"];
+            } | null;
+            /** @description Documents and custom questions for the application form. Omit the object to keep the current form. Supplying it replaces the form in full: omitted `documents` resets to a required CV, and omitted `screeningQuestions` removes the custom questions. */
+            applicationForm?: {
+                /** @description `CV` cannot be removed, though its `constraint` may be `OPTIONAL`. `COVER_LETTER` absent means the candidate is not asked for one */
+                documents?: components["schemas"]["ApplicationFormDocument"][];
+                /** @description Custom questions, at most 10. Plan-gated: a non-empty value on a plan below `ADVANCED` is refused with `custom_questions_not_in_plan` */
+                screeningQuestions?: {
+                    /**
+                     * @description Position among the custom questions, from 1
+                     * @example 1
+                     */
+                    order: number;
+                    /**
+                     * @description The prompt shown to the candidate
+                     * @example Do you have a work permit for Germany?
+                     */
+                    question: string;
+                    type: components["schemas"]["ScreeningQuestionType"];
+                    constraint: components["schemas"]["ScreeningQuestionConstraint"];
+                    /** @description Required for `SINGLE_CHOICE` and `MULTI_CHOICE`, refused for the other types */
+                    options?: components["schemas"]["ScreeningQuestionOption"][];
+                    /** @description Required when an `INTEGER`, `DATE` or `BOOLEAN` question is a knockout, refused otherwise */
+                    rejectIf?: components["schemas"]["ScreeningQuestionRejectIf"];
+                }[];
+            };
+            /** @description Company users to assign to this job. Omit to keep the current assignments. A supplied array replaces the assignments; `null` clears them. System Admins retain access through their company role. */
+            hiringTeam?: {
                 /**
                  * Format: email
-                 * @description email of the contact person
-                 * @example erika@musterfrau.de
+                 * @description Must be a user in your company
+                 * @example alex.fischer@example.com
                  */
-                email?: string;
-                /**
-                 * @description position of the contact person
-                 * @example Recruiter
-                 */
-                position?: string;
-            } | null;
-            /** @description Hiring team */
-            hiringTeam?: components["schemas"]["HiringTeam"][] | null;
-            /**
-             * @description seniority id of the job
-             * @example 123
-             */
-            seniorityId?: number;
+                email: string;
+                role: components["schemas"]["AssignableHiringTeamRole"];
+            }[] | null;
             /**
              * Format: email
-             * @description contact person displayed on the job ad
-             * @example john.doe@email.com
+             * @description Company member shown on the public ad. Sending `null` clears it.
+             * @example alex.fischer@example.com
              */
-            contactPerson?: string | null;
+            contactPersonEmail?: string | null;
             /**
-             * @description remote type of the job
-             * @enum {string|null}
+             * @description Your own reference for the job. Multiple jobs can share this value; the `externalId` filter returns all matches. Shown in the product as *Internal Job ID*. Sending `null` clears it.
+             * @example ATS-4711
              */
-            workplaceType?: "ONSITE" | "REMOTE" | "HYBRID" | null;
-            /**
-             * @description type of remote option (only if workplaceType REMOTE): remote from anywhere or remote within country of office
-             * @example ANYWHERE
-             * @enum {string|null}
-             */
-            remoteType?: "ANYWHERE" | "COUNTRY" | null;
-            /**
-             * @description candidate cv
-             * @example REQUIRED
-             * @enum {string}
-             */
-            cv?: "REQUIRED" | "OPTIONAL" | "OFF";
-            /**
-             * @description candidate cover letter
-             * @example REQUIRED
-             * @enum {string}
-             */
-            coverLetter?: "REQUIRED" | "OPTIONAL" | "OFF";
-            /** @description Screening questions */
-            questions?: components["schemas"]["Questions"][];
+            externalId?: string | null;
         };
-        UpdateJobStatus: {
+        /** @description Partial update. `name`, `address`, and `isDefault` are all optional. A provided `address` replaces the stored address in full. */
+        UpdateLocation: {
             /**
-             * @description status of the job
-             * @enum {string}
-             */
-            status?: "ONLINE" | "OFFLINE" | "ARCHIVED";
-        };
-        UpdateOffice: {
-            /**
-             * @description country code according to [iso-3166-1-alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
-             * @example DE
-             */
-            countryIso?: string;
-            /**
-             * @description name of the office
+             * @description Location name
              * @example Berlin Office
              */
             name?: string;
+            address?: components["schemas"]["LocationAddressInput"];
             /**
-             * @description City where the office is located
-             * @example Berlin
+             * @description Official establishment registration number (e.g. SIRET in France); only for countries that use one. Sending `null` clears it
+             * @example 12345678901234
              */
-            city?: string;
+            establishmentId?: string | null;
             /**
-             * @description Name of the street where the office is located
-             * @example Frankfurter Allee
-             */
-            streetName?: string | null;
-            /**
-             * @description The number on the street of office
-             * @example 46
-             */
-            streetNumber?: string | null;
-            /**
-             * @description Office postal code
-             * @example 11234
-             */
-            postalCode?: string | null;
-            /**
-             * @description Whether this is the default preselected office for the job ads
-             *     Note: only one office can be a default at a time.
+             * @description Whether this is the default location preselected for job ads
              * @example true
              */
             isDefault?: boolean;
         };
+        /** @description Error envelope for 422 responses and for the 400 `filter_invalid` failure. Field-level `validation_error` and `filter_invalid` failures include a `details` array with one entry per offending field; business-rule failures (e.g. `location_is_default`) carry only `code` and `message`. */
         ValidationError: {
-            /** @example Error message */
-            message?: string;
-            errors?: {
-                /** @example .body.attribute */
-                path?: string;
-                /** @example Error message */
-                message?: string;
-                /** @example Should have required property 'example' */
-                errorCode?: string;
-            }[];
+            error: {
+                /**
+                 * @description Machine-readable error code: `validation_error` for field validation, or a specific business-rule code otherwise.
+                 * @example validation_error
+                 */
+                code: string;
+                /**
+                 * @description Human-readable summary of the failure.
+                 * @example The request body contains invalid fields.
+                 */
+                message: string;
+                /** @description Present for field-level `validation_error` and `filter_invalid` failures: one entry per offending field. */
+                details?: components["schemas"]["FieldError"][];
+            };
+        };
+        /**
+         * @description A day of the week.
+         * @example MON
+         * @enum {string}
+         */
+        WeekDay: "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN";
+        /** @description Where the job is performed. Which of the optional members is set follows from `workplaceType` and `remoteType`: `location` for `ONSITE`/`HYBRID`, `hybridSchedule` for `HYBRID` when one is set, `countryCode` for `REMOTE` + `COUNTRY`, `remoteRegion` for `REMOTE` + `REGION`, and none of them for `REMOTE` + `ANYWHERE`. */
+        WorkLocation: {
+            workplaceType: components["schemas"]["WorkplaceType"];
+            /**
+             * @description How widely a remote job is scoped; `null` unless `workplaceType` is `REMOTE`
+             * @example REGION
+             * @enum {string|null}
+             */
+            remoteType?: "ANYWHERE" | "COUNTRY" | "REGION" | null;
+            /** @description The location the job is performed at; `null` unless `workplaceType` is `ONSITE` or `HYBRID` */
+            location?: components["schemas"]["JobLocation"] | null;
+            /**
+             * @description ISO 3166-1 alpha-2 country code. Only for `REMOTE` + `COUNTRY`
+             * @example DE
+             */
+            countryCode?: string | null;
+            /** @description The region the job is scoped to; `null` unless `remoteType` is `REGION` */
+            remoteRegion?: components["schemas"]["RemoteRegion"] | null;
+            /** @description The in-office schedule; `null` unless `workplaceType` is `HYBRID`, and for a hybrid job that has none */
+            hybridSchedule?: components["schemas"]["HybridSchedule"] | null;
+        };
+        /** @description Where the job is performed. Each workplace model carries exactly the fields it needs and refuses the others: `locationId` for `ONSITE` and `HYBRID`, `hybridSchedule` optionally for `HYBRID`, and then `countryCode` for `REMOTE` + `COUNTRY` or `remoteRegionId` for `REMOTE` + `REGION`. `REMOTE` + `ANYWHERE` carries none of them. Replaced in full on update, so changing the model clears what the previous one carried. */
+        WorkLocationInput: components["schemas"]["OnsiteWorkLocationInput"] | components["schemas"]["HybridWorkLocationInput"] | components["schemas"]["RemoteWorkLocationInput"];
+        /**
+         * @description Where the job is performed.
+         * @example HYBRID
+         * @enum {string}
+         */
+        WorkplaceType: "ONSITE" | "HYBRID" | "REMOTE";
+    };
+    responses: {
+        /** @description No application with this id exists within the caller’s company. IDs belonging to other companies or to deleted applications are reported the same way, so the response never reveals which IDs exist elsewhere. */
+        ApplicationNotFound: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The request could not be processed: an unsupported API version, or an unparseable JSON body. */
+        BodyRequestInvalid: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description No candidate with this id exists within the caller’s company. IDs belonging to other companies or to deleted candidates are reported the same way. */
+        CandidateNotFound: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The request body failed validation, or the application could not be created: the job is archived (`job_archived`), the candidate already applied to it (`application_already_exists`), or the candidate is blocked (`candidate_blocked`). */
+        CreateApplicationUnprocessable: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ValidationError"];
+            };
+        };
+        /** @description The request body failed validation, or the candidate already holds the maximum number of notes (`note_limit_reached`). */
+        CreateNoteUnprocessable: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ValidationError"];
+            };
+        };
+        /** @description An unexpected error occurred on JOIN’s side. For a write, the outcome may be uncertain: read the affected record before retrying. See [Responses, errors and retries](requests-and-responses). */
+        InternalServerError: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "unknown",
+                 *         "message": "Something went wrong"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description No job with this id exists within the caller’s company. A job belonging to another company is reported the same way. */
+        JobNotFound: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The request body failed validation, or the job could not be saved: the company has no free active-job slot (`job_limit_reached`), the job’s country mandates a public gross salary (`salary_visibility_restricted`), or custom screening questions are not included in the company’s plan (`custom_questions_not_in_plan`). */
+        JobWriteUnprocessable: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ValidationError"];
+            };
+        };
+        /** @description The request could not be processed: an unsupported API version, an invalid or expired cursor, or a filter value the API could not resolve (`filter_invalid`, naming the field). A filter that is structurally wrong — an unknown enum value or an unparseable timestamp — is rejected earlier, by schema validation, with 422 `validation_error`. */
+        ListRequestInvalid: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ValidationError"];
+            };
+        };
+        /** @description No location with this id exists within the caller’s company. IDs belonging to other companies or to deleted locations are reported the same way, so the response never reveals which IDs exist elsewhere. */
+        LocationNotFound: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "location_not_found",
+                 *         "message": "Location not found"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The request could not be processed: an unsupported API version, or a filter value the API could not resolve (`filter_invalid`, naming the field). A filter that is structurally wrong — an unknown enum value — is rejected earlier, by schema validation, with 422 `validation_error`. */
+        LookupRequestInvalid: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Either the candidate or the note does not exist within the caller’s company. Notes belonging to another company are reported the same way. */
+        NoteNotFound: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The request could not be processed: an unsupported API version, or an invalid or expired cursor. A filter that is structurally wrong is rejected earlier, by schema validation, with 422 `validation_error`. */
+        PipelineListRequestInvalid: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The request body failed validation, or the move was refused: the stage belongs to another pipeline (`stage_not_in_pipeline`), or the application is rejected (`application_rejected`). */
+        PipelineStageUnprocessable: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ValidationError"];
+            };
+        };
+        /** @description A path parameter, query parameter or body field failed schema validation. */
+        RequestSchemaInvalid: {
+            headers: {
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ValidationError"];
+            };
+        };
+        /** @description The token exceeded its sustained (600/60s) or burst (100/10s) request quota. Retry after the number of seconds in `Retry-After`. */
+        TooManyRequests: {
+            headers: {
+                "Retry-After": components["headers"]["RetryAfter"];
+                "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "rate_limit_exceeded",
+                 *         "message": "Rate limit exceeded"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Authentication failed. Either the `Authorization: Bearer` header is missing (`authentication_required`), or the presented token is malformed, unknown, revoked, or belongs to a company that no longer has API access (`token_invalid`). */
+        Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The `Join-Version` header names a version this API does not serve. */
+        UnsupportedApiVersion: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "error": {
+                 *         "code": "unsupported_api_version",
+                 *         "message": "Unsupported API version"
+                 *       }
+                 *     }
+                 */
+                "application/json": components["schemas"]["Error"];
+            };
         };
     };
-    responses: never;
-    parameters: never;
+    parameters: {
+        /**
+         * @description Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad.
+         * @example de-CH, en
+         */
+        AcceptLanguage: string;
+        /** @description Order by creation date: `createdAt` for oldest first, the default, or `-createdAt` for newest first. A cursor keeps the order it was read under */
+        CreationSort: "createdAt" | "-createdAt";
+        /** @description Position from the previous response's `nextCursor`. Omit on the first request */
+        Cursor: string;
+        /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+        JoinVersion: string;
+        /** @description Number of records to return */
+        Limit: number;
+    };
     requestBodies: never;
-    headers: never;
+    headers: {
+        /** @description Set only when the resolved API version is deprecated: when the version was deprecated, as a Unix timestamp prefixed with `@`. See RFC 9745. */
+        Deprecation: string;
+        /** @description Set only when the resolved API version is deprecated: a link to the migration guide, with `rel="sunset"`. */
+        Link: string;
+        /** @description Burst request quota: the maximum number of requests allowed per token in the short burst window (currently 100 requests / 10s). */
+        RateLimitBurstLimit: number;
+        /** @description Requests left in the current burst window for this token. */
+        RateLimitBurstRemaining: number;
+        /** @description Unix timestamp (seconds) at which the burst window resets. */
+        RateLimitBurstReset: number;
+        /** @description Sustained request quota: the maximum number of requests allowed per token in the sustained window (currently 600 requests / 60s). Present on every response served past authentication. */
+        RateLimitLimit: number;
+        /** @description Requests left in the current sustained window for this token. */
+        RateLimitRemaining: number;
+        /** @description Unix timestamp (seconds) at which the sustained window resets. */
+        RateLimitReset: number;
+        /** @description Seconds to wait before retrying. Sent only on 429 responses. */
+        RetryAfter: number;
+        /** @description Set only when the resolved API version is deprecated: an HTTP date after which the version stops being served. See RFC 8594. */
+        Sunset: string;
+    };
     pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getApplicationFileById: {
-        parameters: {
-            query: {
-                /** @description Signature of the application file */
-                sig: string;
-            };
-            header?: never;
-            path: {
-                /** @description Id of the application file */
-                id: string;
-                /** @description External file name of the application file */
-                externalFileName: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The attachment has been returned */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/pdf": string;
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The file could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getApplications: {
+    listApplications: {
         parameters: {
             query?: {
-                /** @description Used to specify further pages (starts at 1, defaults to 1) */
-                page?: number;
-                /** @description Number of items to include in pagination (up to 50, defaults to 10) */
-                pageSize?: number;
-                /**
-                 * @description Creation time greater or equal to (accepts date and date-time format)
-                 * @example 2020-01-01T00:00:00Z
-                 */
-                createdAtGte?: string;
-                /**
-                 * @description Creation time lesser than (accepts date and date-time format)
-                 * @example 2020-01-01T00:00:00Z
-                 */
-                createdAtLt?: string;
-                /**
-                 * @description Update time greater or equal to (accepts date and date-time format)
-                 * @example 2020-01-01T00:00:00Z
-                 */
-                updatedAtGte?: string;
-                /**
-                 * @description Update time lesser than (accepts date and date-time format)
-                 * @example 2020-01-01T00:00:00Z
-                 */
-                updatedAtLt?: string;
-                /**
-                 * @description Country code according to [iso-3166-1-alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
-                 * @example DE
-                 */
-                countryCode?: string;
-                /** @description Id of the job */
+                /** @description Number of records to return */
+                limit?: components["parameters"]["Limit"];
+                /** @description Position from the previous response's `nextCursor`. Omit on the first request */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Order by creation date: `createdAt` for oldest first, the default, or `-createdAt` for newest first. A cursor keeps the order it was read under */
+                sort?: components["parameters"]["CreationSort"];
+                /** @description Filter by the job applied to */
                 jobId?: number;
-                /** @description External id of the job */
-                jobExternalId?: string;
-                /** @description Title of the job (partial match) */
-                jobTitleLike?: string;
-                /** @description Whether the application has an integration external id */
-                hasIntegrationExternalId?: boolean;
-                /** @description The external id of the application */
-                integrationExternalId?: string;
-                /**
-                 * @deprecated
-                 * @description SCREENING and QUALIFIED are deprecated — will be removed on 2026-11-01. Cannot be combined with hiringState or stageType. Migrate to hiringState.
-                 */
-                state?: "SCREENING" | "QUALIFIED" | "REJECTED" | "HIRED" | "OFFER";
-                /** @description Filter by canonical hiring state. Cannot be combined with the deprecated state param. Combine with stageType for a precise filter — e.g. hiringState=ACTIVE&stageType=APPLICATION_REVIEW for screening-stage apps, hiringState=ACTIVE&stageType=INTERVIEW for qualified-stage apps. */
-                hiringState?: "APPLIED" | "ACTIVE" | "REJECTED" | "HIRED" | "OFFER";
-                /** @description Filter by pipeline stage type. Cannot be combined with the deprecated state param. Combine with hiringState for a precise filter. */
-                stageType?: "APPLIED" | "APPLICATION_REVIEW" | "INTERVIEW" | "OFFER" | "HIRED";
+                /** @description Filter by the candidate, using their id within your company */
+                candidateId?: number;
+                /** @description Filter by hiring status */
+                status?: components["schemas"]["ApplicationStatus"];
+                /** @description Filter by the type of the stage the application sits in. An application with no stage matches no value */
+                pipelineStageType?: components["schemas"]["PipelineStageType"];
+                /** @description Filter by your own reference */
+                externalId?: string;
+                /** @description Only applications created on or after this ISO 8601 timestamp */
+                createdAfter?: string;
+                /** @description Only applications created before this ISO 8601 timestamp */
+                createdBefore?: string;
+                /** @description Only applications last changed on or after this ISO 8601 timestamp */
+                updatedAfter?: string;
+                /** @description Only applications last changed before this ISO 8601 timestamp */
+                updatedBefore?: string;
             };
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The list of applications */
+            /** @description The company’s applications */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    "x-page-count"?: number;
-                    "x-page"?: number;
-                    "x-page-size"?: number;
-                    "x-page-total"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Application"][];
+                    "application/json": components["schemas"]["ApplicationsPage"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["ListRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createApplication: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -1966,1129 +2650,622 @@ export interface operations {
             /** @description The application is created */
             201: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApplicationId"];
+                    "application/json": components["schemas"]["ApplicationEnvelope"];
                 };
             };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BodyRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["CreateApplicationUnprocessable"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     getApplication: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path: {
-                /** @description Id of the application */
+                /** @description ID of the application */
                 id: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The application exists and has been returned */
+            /** @description The application */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Application"];
+                    "application/json": components["schemas"]["ApplicationEnvelope"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The application could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["UnsupportedApiVersion"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["ApplicationNotFound"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    deleteApplication: {
+    updateApplication: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path: {
-                /** @description Id of the application */
+                /** @description ID of the application */
                 id: number;
             };
             cookie?: never;
         };
-        requestBody?: never;
-        responses: {
-            /** @description The application exists and has been deleted */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example Application deleted */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The application could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    updateApplicationIntegrationData: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Id of the application */
-                id: number;
-            };
-            cookie?: never;
-        };
-        /** @description External id of the application */
         requestBody: {
             content: {
-                "application/json": {
-                    /**
-                     * @description external id of the application
-                     * @example ABF7394D
-                     */
-                    integrationExternalId?: string;
-                };
+                "application/json": components["schemas"]["UpdateApplication"];
             };
         };
         responses: {
-            /** @description The application exists, its integration data has been updated and returned */
+            /** @description The updated application */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @example 123 */
-                        applicationId?: number;
-                        /** @example SOGI34TG45 */
-                        integrationExternalId?: string;
-                    };
+                    "application/json": components["schemas"]["ApplicationEnvelope"];
                 };
             };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The application could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BodyRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["ApplicationNotFound"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    listApplicationScorecards: {
+    updateApplicationStage: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path: {
-                /** @description Id of the application */
+                /** @description ID of the application */
                 id: number;
             };
             cookie?: never;
         };
-        requestBody?: never;
-        responses: {
-            /** @description The list of application scorecards */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Scorecard"][];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The application could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    updateApplicationTags: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Id of the application */
-                id: number;
-            };
-            cookie?: never;
-        };
-        /** @description Application tags list */
         requestBody: {
             content: {
-                "application/json": {
-                    /** @description array of application tags */
-                    tags?: string[];
-                };
+                "application/json": components["schemas"]["UpdateApplicationStage"];
             };
         };
         responses: {
-            /** @description The application exists and it's tags are updated */
+            /** @description The updated application */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @example Application tags updated successfully */
-                        message?: string;
-                    };
+                    "application/json": components["schemas"]["ApplicationEnvelope"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The application could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getAttachmentById: {
-        parameters: {
-            query: {
-                /** @description Signature of the attachment */
-                sig: string;
-            };
-            header?: never;
-            path: {
-                /** @description Id of the attachment */
-                id: string;
-                /** @description External file name of the attachment */
-                externalFileName: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The attachment has been returned */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/pdf": string;
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The file could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BodyRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["ApplicationNotFound"];
+            422: components["responses"]["PipelineStageUnprocessable"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     listCandidates: {
         parameters: {
             query?: {
-                /** @description Used to specify further pages (starts at 1, defaults to 1) */
-                page?: number;
-                /** @description Number of items to include in pagination (up to 50, defaults to 10) */
-                pageSize?: number;
-                /** @description Fuzzy search by email, first name and/or last name */
+                /** @description Number of records to return */
+                limit?: components["parameters"]["Limit"];
+                /** @description Position from the previous response's `nextCursor`. Omit on the first request */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Order by creation date: `createdAt` for oldest first, the default, or `-createdAt` for newest first. A cursor keeps the order it was read under */
+                sort?: components["parameters"]["CreationSort"];
+                /** @description Fuzzy search across first name, last name and email. Supplying it orders the results by relevance instead of by creation date */
                 q?: string;
-                /** @description Candidates created at or after this timestamp (ISO 8601) */
-                createdAtGte?: string;
-                /** @description Candidates created before this timestamp (ISO 8601) */
-                createdAtLt?: string;
-                /** @description Comma-separated list of related resources to embed. Supported: notes */
-                include?: string;
+                /** @description Filter by source id, as in the `source.id` of a candidate or an application */
+                sourceId?: number;
+                /** @description Filter by tag name — a candidate matches when it carries any of the given names. Repeat the parameter to give several (`?tags=Senior&tags=Berlin`). A name that matches no tag in your catalog matches no candidate rather than failing */
+                tags?: string[];
+                /** @description Filter by the candidate’s consent status: `ACCEPTED` or `PENDING`. */
+                consentStatus?: components["schemas"]["ConsentStatusFilter"];
+                /** @description Only candidates created on or after this ISO 8601 timestamp */
+                createdAfter?: string;
+                /** @description Only candidates created before this ISO 8601 timestamp */
+                createdBefore?: string;
             };
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description A paginated list of candidates */
+            /** @description The company’s candidates */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    "x-page-count"?: number;
-                    "x-page"?: number;
-                    "x-page-size"?: number;
-                    "x-page-total"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Candidate"][];
+                    "application/json": components["schemas"]["CandidatesPage"];
                 };
             };
-            /** @description Bad request — invalid pagination params or unsupported include value */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized — missing or invalid API token */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["ListRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    getCandidate: {
+    listCandidateNotes: {
         parameters: {
             query?: {
-                /** @description Comma-separated list of related resources to embed. Supported: notes */
-                include?: string;
+                /** @description Number of records to return */
+                limit?: components["parameters"]["Limit"];
+                /** @description Position from the previous response's `nextCursor`. Omit on the first request */
+                cursor?: components["parameters"]["Cursor"];
             };
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path: {
-                /** @description Id of the candidate */
-                id: number;
+                /** @description ID of the candidate */
+                candidateId: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The candidate exists and has been returned */
+            /** @description The candidate’s notes */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Candidate"];
+                    "application/json": components["schemas"]["NotesPage"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Candidate not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    updateCandidate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Id of the candidate */
-                id: number;
-            };
-            cookie?: never;
-        };
-        /** @description Candidate properties */
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description an array of candidate tags, will replace all current tags with new */
-                    tags?: string[];
-                };
-            };
-        };
-        responses: {
-            /** @description The candidate has been updated */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        candidate?: {
-                            /** @example 123 */
-                            id?: number;
-                        };
-                    };
-                };
-            };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Candidate not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ContentTooLarge */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getCandidateNotes: {
-        parameters: {
-            query?: {
-                /** @description Used to specify further pages (starts at 1, defaults to 1) */
-                page?: number;
-                /** @description Number of items to include in pagination (up to 50, defaults to 50) */
-                pageSize?: number;
-            };
-            header?: never;
-            path: {
-                /** @description Id of the candidate */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The list of candidate notes */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    "x-page-count"?: number;
-                    "x-page"?: number;
-                    "x-page-size"?: number;
-                    "x-page-total"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Note"][];
-                };
-            };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["ListRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["CandidateNotFound"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createCandidateNote: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path: {
-                /** @description Id of the candidate */
-                id: number;
+                /** @description ID of the candidate */
+                candidateId: number;
             };
             cookie?: never;
         };
-        /** @description Content of the note */
         requestBody: {
             content: {
-                "application/json": {
-                    /**
-                     * @description content of the note
-                     * @example test
-                     */
-                    content?: string;
-                };
+                "application/json": components["schemas"]["CreateNote"];
             };
         };
         responses: {
-            /** @description The note for the candidate has been created */
+            /** @description The note is created */
             201: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SingleNote"];
+                    "application/json": components["schemas"]["NoteEnvelope"];
                 };
             };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ContentTooLarge */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BodyRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["CandidateNotFound"];
+            422: components["responses"]["CreateNoteUnprocessable"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     deleteCandidateNote: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path: {
-                /** @description Id of the candidate */
-                id: number;
-                /** @description Id of the note */
+                /** @description ID of the candidate */
+                candidateId: number;
+                /** @description ID of the note */
                 noteId: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The note has been deleted */
-            200: {
+            /** @description The note is deleted */
+            204: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": {
-                        /** @example Note deleted */
-                        message?: string;
-                    };
-                };
+                content?: never;
             };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The note can not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["UnsupportedApiVersion"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NoteNotFound"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    updateCandidateNote: {
+    getCandidate: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path: {
-                /** @description Id of the candidate */
+                /** @description ID of the candidate */
                 id: number;
-                /** @description Id of the note */
-                noteId: number;
             };
-            cookie?: never;
-        };
-        /** @description Content of the note */
-        requestBody: {
-            content: {
-                "application/json": {
-                    /**
-                     * @description content of the note
-                     * @example test
-                     */
-                    content?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description The note for the candidate has been updated */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SingleNote"];
-                };
-            };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The note can not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ContentTooLarge */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getCategories: {
-        parameters: {
-            query?: {
-                /** @description Translate response to specific language, defaults to en */
-                language?: string;
-            };
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The list of categories */
+            /** @description The candidate */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    "x-page-count"?: number;
-                    "x-page"?: number;
-                    "x-page-size"?: number;
-                    "x-page-total"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CategoryWithChild"][];
+                    "application/json": components["schemas"]["CandidateEnvelope"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["UnsupportedApiVersion"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["CandidateNotFound"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    getEmploymentTypes: {
+    deleteCandidate: {
         parameters: {
-            query?: {
-                /** @description Translate response to specific language, defaults to en */
-                language?: string;
+            query?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
             };
-            header?: never;
-            path?: never;
+            path: {
+                /** @description ID of the candidate */
+                id: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The list of employment types */
-            200: {
+            /** @description The candidate is deleted */
+            204: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    "x-page-count"?: number;
-                    "x-page"?: number;
-                    "x-page-size"?: number;
-                    "x-page-total"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["EmploymentType"][];
-                };
+                content?: never;
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["UnsupportedApiVersion"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["CandidateNotFound"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    getJobs: {
+    listContractTypes: {
         parameters: {
             query?: {
-                /** @description Used to specify further pages (starts at 1, defaults to 1) */
-                page?: number;
-                /** @description Number of items to include in pagination (up to 50, defaults to 50) */
-                pageSize?: number;
-                /**
-                 * @description Creation time greater or equal to (accepts date and date-time format)
-                 * @example 2020-01-01T00:00:00Z
-                 */
-                createdAtGte?: string;
-                /**
-                 * @description Creation time lesser than (accepts date and date-time format)
-                 * @example 2020-01-01T00:00:00Z
-                 */
-                createdAtLt?: string;
-                /**
-                 * @description Update time greater or equal to (accepts date and date-time format)
-                 * @example 2020-01-01T00:00:00Z
-                 */
-                updatedAtGte?: string;
-                /**
-                 * @description Update time lesser than (accepts date and date-time format)
-                 * @example 2020-01-01T00:00:00Z
-                 */
-                updatedAtLt?: string;
-                /** @description Status of the job (defaults to ONLINE), can be combined by separating the status with a comma (e.g. ONLINE,OFFLINE,ARCHIVED to return all jobs). Note: The value 'ALL' is deprecated, use 'ONLINE,OFFLINE,ARCHIVED' instead. */
-                status?: string;
-                /** @description Whether the full content of the job should be returned (defaults to false) */
-                content?: boolean;
-                /** @description Title of the job (partial match) */
-                titleLike?: string;
-                /**
-                 * @description Country code according to [iso-3166-1-alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
-                 * @example DE
-                 */
+                /** @description Restrict to the types of one country, by ISO 3166-1 alpha-2 code. Omit it for the generic types a remote job uses */
                 countryCode?: string;
-                /** @description id to identify the job outside Join */
-                externalId?: string;
-                /** @description Sort the jobs by a field, where '-' indicates descending order. Supported values: -createdAt, -lastUpdatedAt, createdAt, lastUpdatedAt. Any other value or no value will default to -createdAt */
-                sort?: string;
             };
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+                /**
+                 * @description Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad.
+                 * @example de-CH, en
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The list of jobs */
+            /** @description List contract types */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    "x-page-count"?: number;
-                    "x-page"?: number;
-                    "x-page-size"?: number;
-                    "x-page-total"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
+                    /**
+                     * @description Language used for translated display names in this response.
+                     * @example de
+                     */
+                    "Content-Language"?: "en" | "de" | "fr" | "es" | "it" | "nl";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Job"][];
+                    "application/json": components["schemas"]["ContractTypesList"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
+            400: components["responses"]["LookupRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listEmploymentTypes: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+                /**
+                 * @description Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad.
+                 * @example de-CH, en
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List employment types */
+            200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
+                    /**
+                     * @description Language used for translated display names in this response.
+                     * @example de
+                     */
+                    "Content-Language"?: "en" | "de" | "fr" | "es" | "it" | "nl";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["EmploymentTypesList"];
                 };
             };
-            /** @description Too many requests */
-            429: {
+            400: components["responses"]["LookupRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listJobs: {
+        parameters: {
+            query?: {
+                /** @description Number of records to return */
+                limit?: components["parameters"]["Limit"];
+                /** @description Position from the previous response's `nextCursor`. Omit on the first request */
+                cursor?: components["parameters"]["Cursor"];
+                /** @description Order by creation date: `createdAt` for oldest first, the default, or `-createdAt` for newest first. A cursor keeps the order it was read under */
+                sort?: components["parameters"]["CreationSort"];
+                /** @description Filter by status — a job matches when it has any of the given statuses. Repeat the parameter to give several (`?status=ONLINE&status=OFFLINE`); omitted returns all */
+                status?: string[];
+                /** @description Filter by workplace model */
+                workplaceType?: components["schemas"]["WorkplaceType"];
+                /** @description Filter by remote scope */
+                remoteType?: components["schemas"]["RemoteType"];
+                /** @description Jobs at a specific location. Remote jobs never match it, so with `workplaceType=REMOTE` or any `remoteType` the list is empty */
+                locationId?: number;
+                /** @description Jobs of a specific contract type */
+                contractTypeId?: number;
+                /** @description Jobs scoped to a specific remote region */
+                remoteRegionId?: number;
+                /** @description Jobs of a specific employment type, by slug */
+                employmentType?: string;
+                /** @description Filter by ISO 3166-1 alpha-2 country code */
+                countryCode?: string;
+                /** @description Filter by priority */
+                priority?: components["schemas"]["JobPriority"];
+                /** @description Filter by the language the ad is written in. Accept-Language selects the language of supported display names in the response. */
+                languageCode?: components["schemas"]["LanguageCode"];
+                /** @description Jobs carrying your reference. Returns **all** matches, since it is not unique */
+                externalId?: string;
+                /** @description Jobs created at or after this time */
+                createdAfter?: string;
+                /** @description Jobs created strictly before this time */
+                createdBefore?: string;
+                /** @description Jobs updated at or after this time */
+                updatedAfter?: string;
+                /** @description Jobs updated strictly before this time */
+                updatedBefore?: string;
+                /** @description Free-text search across title and description */
+                q?: string;
+            };
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+                /**
+                 * @description Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad.
+                 * @example de-CH, en
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The company’s jobs */
+            200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
+                    /**
+                     * @description Language used for translated display names in this response.
+                     * @example de
+                     */
+                    "Content-Language"?: "en" | "de" | "fr" | "es" | "it" | "nl";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["JobsPage"];
                 };
             };
+            400: components["responses"]["ListRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     createJob: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+                /**
+                 * @description Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad.
+                 * @example de-CH, en
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -3098,115 +3275,101 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The job is created */
+            /** @description The job is created and published */
             201: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
+                    /**
+                     * @description Language used for translated display names in this response.
+                     * @example de
+                     */
+                    "Content-Language"?: "en" | "de" | "fr" | "es" | "it" | "nl";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["JobId"];
+                    "application/json": components["schemas"]["JobEnvelope"];
                 };
             };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BodyRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["JobWriteUnprocessable"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     getJob: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+                /**
+                 * @description Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad.
+                 * @example de-CH, en
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
             path: {
-                /** @description Id of the job */
+                /** @description ID of the job */
                 id: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The job exists and has been returned */
+            /** @description The job */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
+                    /**
+                     * @description Language used for translated display names in this response.
+                     * @example de
+                     */
+                    "Content-Language"?: "en" | "de" | "fr" | "es" | "it" | "nl";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Job"];
+                    "application/json": components["schemas"]["JobEnvelope"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The job could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["UnsupportedApiVersion"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["JobNotFound"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
     updateJob: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+                /**
+                 * @description Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad.
+                 * @example de-CH, en
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
             path: {
-                /** @description Id of the job */
+                /** @description ID of the job */
                 id: number;
             };
             cookie?: never;
@@ -3217,267 +3380,78 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The job is updated successfully */
+            /** @description The updated job */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
+                    /**
+                     * @description Language used for translated display names in this response.
+                     * @example de
+                     */
+                    "Content-Language"?: "en" | "de" | "fr" | "es" | "it" | "nl";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["JobId"];
+                    "application/json": components["schemas"]["JobEnvelope"];
                 };
             };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            400: components["responses"]["BodyRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["JobNotFound"];
+            422: components["responses"]["JobWriteUnprocessable"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    activateJob: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Id of the job */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The job has been successfully activated and is returned */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobId"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The job could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    archiveJob: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Id of the job */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The job is has been succesfully archived and is returned */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobId"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The job could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    updateJobStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Id of the job */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateJobStatus"];
-            };
-        };
-        responses: {
-            /** @description The job is updated successfully */
-            200: {
-                headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JobId"];
-                };
-            };
-            /** @description BadRequest */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getOffices: {
+    listLocations: {
         parameters: {
             query?: {
-                /** @description Used to specify further pages (starts at 1, defaults to 1) */
-                page?: number;
-                /** @description Number of items to include in pagination (up to 50, defaults to 50) */
-                pageSize?: number;
-                /**
-                 * @description Country code according to [iso-3166-1-alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
-                 * @example DE
-                 */
+                /** @description Number of records to return */
+                limit?: number;
+                /** @description Position from the previous response's `nextCursor`. Omit on the first request */
+                cursor?: string;
+                /** @description Filter by country code */
                 countryCode?: string;
-                /** @description Office city name (partial match) */
-                cityNameLike?: string;
+                /** @description Filter by city name (partial match) */
+                city?: string;
             };
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The list of offices */
+            /** @description The company's locations */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    "x-page-count"?: number;
-                    "x-page"?: number;
-                    "x-page-size"?: number;
-                    "x-page-total"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Office"][];
+                    "application/json": components["schemas"]["LocationsPage"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
+            /** @description The request could not be processed: an unsupported API version, or an invalid or expired cursor. */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3485,43 +3459,61 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Too many requests */
-            429: {
+            401: components["responses"]["Unauthorized"];
+            /** @description A query parameter failed schema validation. */
+            422: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    createOffice: {
+    createLocation: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateOffice"];
+                "application/json": components["schemas"]["CreateLocation"];
             };
         };
         responses: {
-            /** @description The office is created */
+            /** @description The location is created */
             201: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OfficeId"];
+                    "application/json": components["schemas"]["LocationEnvelope"];
                 };
             };
-            /** @description BadRequest */
+            /** @description The request could not be processed: an unsupported API version, or an unparseable JSON body. */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -3530,117 +3522,172 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
+            401: components["responses"]["Unauthorized"];
+            /** @description The request body failed validation, or the address / establishment id was rejected, or an identical location already exists. */
             422: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    getOffice: {
+    getLocation: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path: {
-                /** @description Id of the office */
+                /** @description ID of the location */
                 id: number;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The office exists and has been returned */
+            /** @description The location */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Office"];
+                    "application/json": components["schemas"]["LocationEnvelope"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
+            400: components["responses"]["UnsupportedApiVersion"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["LocationNotFound"];
+            /** @description The path id failed schema validation. */
+            422: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
-            /** @description The application could not be found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    updateOffice: {
+    deleteLocation: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
             path: {
-                /** @description Id of the office */
+                /** @description ID of the location */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The location is deleted */
+            204: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["UnsupportedApiVersion"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["LocationNotFound"];
+            /** @description The location is the company default or is referenced by active jobs, or the path id failed schema validation. */
+            422: {
+                headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    updateLocation: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path: {
+                /** @description ID of the location */
                 id: number;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateOffice"];
+                "application/json": components["schemas"]["UpdateLocation"];
             };
         };
         responses: {
-            /** @description The office is updated successfully */
+            /** @description The updated location */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OfficeId"];
+                    "application/json": components["schemas"]["LocationEnvelope"];
                 };
             };
-            /** @description BadRequest */
+            /** @description The request could not be processed: an unsupported API version, or an unparseable JSON body. */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -3649,81 +3696,170 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description ValidationError */
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["LocationNotFound"];
+            /** @description The request body failed validation, or the write would leave the company without a default location. */
             422: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"] | components["schemas"]["ValidationError"];
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
-            /** @description Too many requests */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
-    getSeniorityLevels: {
+    listPipelineTemplates: {
         parameters: {
             query?: {
-                /** @description Translate response to specific language, defaults to en */
-                language?: string;
+                /** @description Number of records to return */
+                limit?: components["parameters"]["Limit"];
+                /** @description Position from the previous response's `nextCursor`. Omit on the first request */
+                cursor?: components["parameters"]["Cursor"];
             };
-            header?: never;
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+                /**
+                 * @description Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad.
+                 * @example de-CH, en
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description The list of seniority vevels */
+            /** @description List pipeline templates */
             200: {
                 headers: {
-                    "x-ratelimit-limit"?: number;
-                    "x-ratelimit-remaining"?: number;
-                    "x-ratelimit-reset"?: number;
-                    "x-page-count"?: number;
-                    "x-page"?: number;
-                    "x-page-size"?: number;
-                    "x-page-total"?: number;
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
+                    /**
+                     * @description Language used for translated display names in this response.
+                     * @example de
+                     */
+                    "Content-Language"?: "en" | "de" | "fr" | "es" | "it" | "nl";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Seniority"][];
+                    "application/json": components["schemas"]["PipelineTemplatesList"];
                 };
             };
-            /** @description Unauthorized */
-            401: {
+            400: components["responses"]["PipelineListRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listRemoteRegions: {
+        parameters: {
+            query?: {
+                /** @description Restrict to the regions covering one country, by ISO 3166-1 alpha-2 code */
+                countryCode?: string;
+                /** @description Free-text search over the region name */
+                q?: string;
+            };
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+                /**
+                 * @description Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad.
+                 * @example de-CH, en
+                 */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List remote regions */
+            200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
+                    /**
+                     * @description Language used for translated display names in this response.
+                     * @example de
+                     */
+                    "Content-Language"?: "en" | "de" | "fr" | "es" | "it" | "nl";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["RemoteRegionsList"];
                 };
             };
-            /** @description Too many requests */
-            429: {
+            400: components["responses"]["LookupRequestInvalid"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listScorecards: {
+        parameters: {
+            query: {
+                /** @description ID of the candidate whose scorecards to return */
+                candidateId: number;
+            };
+            header?: {
+                /** @description Selects a dated API revision in `YYYY-MM-DD` format, such as `2026-11-01`. Pin this header to choose the revision explicitly; omitting it uses the server’s default. An unsupported value returns `400 unsupported_api_version`. See [Versions and compatibility](versioning-and-depreciation). */
+                "Join-Version"?: components["parameters"]["JoinVersion"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The candidate's published scorecards */
+            200: {
                 headers: {
+                    "X-RateLimit-Limit": components["headers"]["RateLimitLimit"];
+                    "X-RateLimit-Remaining": components["headers"]["RateLimitRemaining"];
+                    "X-RateLimit-Reset": components["headers"]["RateLimitReset"];
+                    "X-RateLimit-Burst-Limit": components["headers"]["RateLimitBurstLimit"];
+                    "X-RateLimit-Burst-Remaining": components["headers"]["RateLimitBurstRemaining"];
+                    "X-RateLimit-Burst-Reset": components["headers"]["RateLimitBurstReset"];
+                    Deprecation: components["headers"]["Deprecation"];
+                    Sunset: components["headers"]["Sunset"];
+                    Link: components["headers"]["Link"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["ScorecardsList"];
                 };
             };
+            400: components["responses"]["UnsupportedApiVersion"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["CandidateNotFound"];
+            422: components["responses"]["RequestSchemaInvalid"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
         };
     };
 }

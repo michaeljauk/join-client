@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { collectPages, createJoinClient, JoinError } from "../src/index.js";
+import {
+  collectPages,
+  createJoinClient,
+  DEFAULT_API_VERSION,
+  JoinError,
+} from "../src/index.js";
 
 function json(body: unknown, init: ResponseInit = {}): Response {
   const headers = new Headers(init.headers);
@@ -12,25 +17,45 @@ describe("createJoinClient", () => {
     expect(() => createJoinClient({ token: "" })).toThrow(JoinError);
   });
 
-  it("sends the raw token in the Authorization header", async () => {
-    const fetch = vi.fn(async () => json([]));
-    const join = createJoinClient({ token: "tok_123", fetch });
+  it("sends a Bearer token and pins Join-Version", async () => {
+    const fetch = vi.fn(async () => json({ data: [], nextCursor: null }));
+    const join = createJoinClient({ token: "join_sk_123", fetch });
     await join.GET("/jobs");
     const req = fetch.mock.calls[0]![0];
-    expect(req.headers.get("authorization")).toBe("tok_123");
-    expect(req.url).toBe("https://api.join.com/v2/jobs");
+    expect(req.headers.get("authorization")).toBe("Bearer join_sk_123");
+    expect(req.headers.get("join-version")).toBe(DEFAULT_API_VERSION);
+    expect(req.url).toBe("https://api.join.com/v3/jobs");
   });
 
-  it("throws JoinError on non-2xx", async () => {
-    const fetch = vi.fn(async () => new Response("forbidden", { status: 403 }));
+  it("does not double a Bearer prefix and honors apiVersion", async () => {
+    const fetch = vi.fn(async () => json({ data: [], nextCursor: null }));
+    const join = createJoinClient({
+      token: "Bearer tok",
+      apiVersion: "2027-01-01",
+      fetch,
+    });
+    await join.GET("/jobs");
+    const req = fetch.mock.calls[0]![0];
+    expect(req.headers.get("authorization")).toBe("Bearer tok");
+    expect(req.headers.get("join-version")).toBe("2027-01-01");
+  });
+
+  it("throws JoinError with the error code on non-2xx", async () => {
+    const fetch = vi.fn(async () =>
+      json(
+        { error: { code: "token_invalid", message: "Invalid token" } },
+        { status: 401 },
+      ),
+    );
     const join = createJoinClient({ token: "tok", fetch });
     await expect(join.GET("/jobs")).rejects.toMatchObject({
       name: "JoinError",
-      status: 403,
+      status: 401,
+      code: "token_invalid",
     });
   });
 
-  it("retries after 429 and waits for x-ratelimit-reset", async () => {
+  it("retries after 429 and waits for Retry-After", async () => {
     vi.useFakeTimers();
     try {
       let calls = 0;
@@ -39,15 +64,42 @@ describe("createJoinClient", () => {
         return calls === 1
           ? new Response("slow down", {
               status: 429,
-              headers: { "x-ratelimit-reset": "2" },
+              headers: { "retry-after": "2" },
             })
-          : json([{ id: 1 }]);
+          : json({ data: [{ id: 1 }], nextCursor: null });
       });
       const join = createJoinClient({ token: "tok", fetch });
       const pending = join.GET("/jobs");
       await vi.advanceTimersByTimeAsync(2_100);
       const { data } = await pending;
-      expect(data).toEqual([{ id: 1 }]);
+      expect(data).toEqual({ data: [{ id: 1 }], nextCursor: null });
+      expect(fetch).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("reads X-RateLimit-Reset as a Unix timestamp", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-11-01T00:00:00Z"));
+      const reset = String(Date.now() / 1_000 + 3);
+      let calls = 0;
+      const fetch = vi.fn(async () => {
+        calls++;
+        return calls === 1
+          ? new Response("", {
+              status: 429,
+              headers: { "x-ratelimit-reset": reset },
+            })
+          : json({ data: [], nextCursor: null });
+      });
+      const join = createJoinClient({ token: "tok", fetch });
+      const pending = join.GET("/jobs");
+      await vi.advanceTimersByTimeAsync(2_000);
+      expect(fetch).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(1_200);
+      await pending;
       expect(fetch).toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
@@ -59,7 +111,7 @@ describe("createJoinClient", () => {
       async () =>
         new Response("slow down", {
           status: 429,
-          headers: { "x-ratelimit-reset": "0" },
+          headers: { "retry-after": "0" },
         }),
     );
     const join = createJoinClient({
@@ -78,13 +130,13 @@ describe("createJoinClient", () => {
       return bodies.length === 1
         ? new Response("", {
             status: 429,
-            headers: { "x-ratelimit-reset": "0" },
+            headers: { "retry-after": "0" },
           })
         : json({ id: 7 }, { status: 201 });
     });
     const join = createJoinClient({ token: "tok", fetch });
-    await join.POST("/candidates/{id}/notes", {
-      params: { path: { id: 1 } },
+    await join.POST("/candidates/{candidateId}/notes", {
+      params: { path: { candidateId: 1 } },
       body: { content: "hello" },
     });
     expect(bodies).toEqual(['{"content":"hello"}', '{"content":"hello"}']);
@@ -92,22 +144,29 @@ describe("createJoinClient", () => {
 });
 
 describe("collectPages", () => {
-  it("follows x-page-count", async () => {
-    const pages: Record<number, number[]> = { 1: [1, 2], 2: [3, 4], 3: [5] };
-    const fetchPage = vi.fn(async (page: number) => ({
-      data: pages[page],
-      response: new Response(null, { headers: { "x-page-count": "3" } }),
+  it("follows nextCursor until it is null", async () => {
+    const pages: Record<string, { data: number[]; nextCursor: string | null }> =
+      {
+        start: { data: [1, 2], nextCursor: "b" },
+        b: { data: [3, 4], nextCursor: "c" },
+        c: { data: [5], nextCursor: null },
+      };
+    const fetchPage = vi.fn(async (cursor: string | undefined) => ({
+      data: pages[cursor ?? "start"],
     }));
     expect(await collectPages(fetchPage)).toEqual([1, 2, 3, 4, 5]);
-    expect(fetchPage).toHaveBeenCalledTimes(3);
+    expect(fetchPage.mock.calls.map((c) => c[0])).toEqual([
+      undefined,
+      "b",
+      "c",
+    ]);
   });
 
-  it("stops when the header is missing", async () => {
+  it("stops when a cursor repeats", async () => {
     const fetchPage = vi.fn(async () => ({
-      data: [1],
-      response: new Response(null),
+      data: { data: [1], nextCursor: "same" },
     }));
-    expect(await collectPages(fetchPage)).toEqual([1]);
-    expect(fetchPage).toHaveBeenCalledTimes(1);
+    expect(await collectPages(fetchPage)).toEqual([1, 1]);
+    expect(fetchPage).toHaveBeenCalledTimes(2);
   });
 });
