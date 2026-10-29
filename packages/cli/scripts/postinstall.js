@@ -1,24 +1,26 @@
 #!/usr/bin/env node
-// Installs the join skill to ~/.claude/skills/join/ on global installs.
+// On global installs, runs `join-com skill install`, which copies the skill to
+// $CLAUDE_CONFIG_DIR/skills/join/ and leaves a symlinked skill folder alone.
+// npm 11.19+ and pnpm skip install scripts by default; the README says so.
 // Non-fatal: failures here must not break `npm install`.
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const srcDir = join(__dirname, "..", "skills", "join");
-const dstDir = join(homedir(), ".claude", "skills", "join");
+const cli = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "dist",
+  "index.js",
+);
 
 try {
   if (process.env.npm_config_global !== "true") process.exit(0);
-  if (!existsSync(join(srcDir, "SKILL.md"))) process.exit(0);
-  mkdirSync(dstDir, { recursive: true });
-  for (const file of ["SKILL.md", "SCHEMA.md"]) {
-    if (existsSync(join(srcDir, file)))
-      copyFileSync(join(srcDir, file), join(dstDir, file));
-  }
-  console.log(`join: Claude Code skill installed -> ${dstDir}`);
+  if (!existsSync(cli)) process.exit(0);
+  execFileSync(process.execPath, [cli, "skill", "install"], {
+    stdio: "inherit",
+  });
 } catch {
   // swallow
 }
