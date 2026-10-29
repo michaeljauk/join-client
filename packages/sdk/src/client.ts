@@ -76,18 +76,24 @@ function withRateLimitRetry(
 }
 
 // Retry-After is in seconds. The reset headers are Unix timestamps in
-// seconds and serve only as a fallback: the burst window (10 s) when it is
-// exhausted, else the sustained window (60 s).
+// seconds and serve only as a fallback: the latest reset of an exhausted
+// window, else the sustained window (60 s).
 function retryDelayMs(response: Response): number {
   const h = response.headers;
   const retryAfter = h.get("retry-after");
-  const reset =
-    h.get("x-ratelimit-burst-remaining") === "0"
-      ? h.get("x-ratelimit-burst-reset")
-      : h.get("x-ratelimit-reset");
+  const exhausted = [
+    ["x-ratelimit-remaining", "x-ratelimit-reset"],
+    ["x-ratelimit-burst-remaining", "x-ratelimit-burst-reset"],
+  ]
+    .filter(([remaining]) => h.get(remaining!) === "0")
+    .map(([, reset]) => Number(h.get(reset!)))
+    .filter(Number.isFinite);
+  const reset = exhausted.length
+    ? Math.max(...exhausted)
+    : Number(h.get("x-ratelimit-reset") ?? Number.NaN);
   let seconds = Number.NaN;
   if (retryAfter != null) seconds = Number(retryAfter);
-  else if (reset != null) seconds = Number(reset) - Date.now() / 1_000;
+  else if (Number.isFinite(reset)) seconds = reset - Date.now() / 1_000;
   if (!Number.isFinite(seconds)) return 1_000;
   return Math.min(Math.max(seconds, 0), 60) * 1_000 + 100;
 }

@@ -136,6 +136,38 @@ describe("createJoinClient", () => {
     }
   });
 
+  it("waits for the later reset when both windows are exhausted", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-11-01T00:00:00Z"));
+      const now = Date.now() / 1_000;
+      let calls = 0;
+      const fetch = vi.fn(async () => {
+        calls++;
+        return calls === 1
+          ? new Response("", {
+              status: 429,
+              headers: {
+                "x-ratelimit-remaining": "0",
+                "x-ratelimit-reset": String(now + 5),
+                "x-ratelimit-burst-remaining": "0",
+                "x-ratelimit-burst-reset": String(now + 2),
+              },
+            })
+          : json({ data: [], nextCursor: null });
+      });
+      const join = createJoinClient({ token: "tok", fetch });
+      const pending = join.GET("/jobs");
+      await vi.advanceTimersByTimeAsync(3_000);
+      expect(fetch).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(2_200);
+      await pending;
+      expect(fetch).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("gives up after maxRateLimitRetries", async () => {
     const fetch = vi.fn(
       async () =>
