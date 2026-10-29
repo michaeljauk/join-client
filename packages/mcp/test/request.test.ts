@@ -1,33 +1,54 @@
 import { describe, expect, it } from "vitest";
-import { extractPathParams, normalizePath } from "../src/lib/request.js";
+import {
+  externalUrl,
+  extractPathParams,
+  normalizePath,
+} from "../src/lib/request.js";
 
 describe("normalizePath", () => {
-  it("turns a full attachment URL into path and query", () => {
+  it("turns a full API URL into path and query", () => {
     const query: Record<string, unknown> = {};
     const path = normalizePath(
-      "https://api.join.com/v2/attachments/abc/def.pdf?sig=xyz",
+      "https://api.join.com/v3/applications?cursor=abc",
       query,
     );
-    expect(path).toBe("/attachments/abc/def.pdf");
-    expect(query).toEqual({ sig: "xyz" });
+    expect(path).toBe("/applications");
+    expect(query).toEqual({ cursor: "abc" });
   });
 
-  it("strips the /v2 prefix and moves the query string", () => {
-    const query: Record<string, unknown> = { pageSize: 5 };
-    expect(normalizePath("/v2/applications?page=2", query)).toBe(
+  it("strips the /v3 prefix and moves the query string", () => {
+    const query: Record<string, unknown> = { limit: 5 };
+    expect(normalizePath("/v3/applications?cursor=abc", query)).toBe(
       "/applications",
     );
-    expect(query).toEqual({ pageSize: 5, page: "2" });
+    expect(query).toEqual({ limit: 5, cursor: "abc" });
   });
 
   it("keeps explicit query values over URL values", () => {
-    const query: Record<string, unknown> = { page: 3 };
-    normalizePath("/jobs?page=1", query);
-    expect(query.page).toBe(3);
+    const query: Record<string, unknown> = { limit: 3 };
+    normalizePath("/jobs?limit=1", query);
+    expect(query.limit).toBe(3);
   });
 
   it("adds a leading slash", () => {
     expect(normalizePath("jobs", {})).toBe("/jobs");
+  });
+});
+
+describe("externalUrl", () => {
+  it("detects a pre-signed document URL", () => {
+    expect(
+      externalUrl("https://storage.googleapis.com/bucket/cv.pdf?X-Sig=1")?.host,
+    ).toBe("storage.googleapis.com");
+  });
+
+  it("leaves JOIN API URLs and plain paths to the client", () => {
+    expect(externalUrl("https://api.join.com/v3/jobs")).toBeUndefined();
+    expect(externalUrl("/jobs")).toBeUndefined();
+  });
+
+  it("rejects plain http", () => {
+    expect(() => externalUrl("http://example.com/cv.pdf")).toThrow(/https/);
   });
 });
 

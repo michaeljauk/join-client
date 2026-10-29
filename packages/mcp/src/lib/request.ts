@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { JoinError } from "join-sdk";
+import { DEFAULT_BASE_URL, JoinError } from "join-sdk";
 import { getClient } from "./client.js";
 
 export interface RequestOptions {
@@ -15,8 +15,6 @@ export interface RequestOptions {
 
 export const DOWNLOAD_DIR = join(tmpdir(), "join-mcp");
 
-const BINARY_PATH = /^\/(attachments|application-files)\/[^/]+\/[^/]+$/;
-
 type Caller = (
   path: string,
   options: unknown,
@@ -27,11 +25,19 @@ type Caller = (
  * openApiMcpServer onto join-sdk. Runs on the host, so the token is injected
  * by the SDK and never reaches agent-authored code.
  *
- * Attachment downloads return binary data. Instead of pushing base64 through
- * the model context, the file is written to DOWNLOAD_DIR and the result
- * names the local path.
+ * A GET on a document URL from `application.documents[].url` downloads the
+ * file. The URL is pre-signed external storage, so it is fetched without the
+ * JOIN token. Instead of pushing base64 through the model context, the file
+ * is written to DOWNLOAD_DIR and the result names the local path.
  */
 export async function request(opts: RequestOptions): Promise<unknown> {
+  const documentUrl = externalUrl(opts.path);
+  if (documentUrl) {
+    if (opts.method !== "GET")
+      throw new Error("Only GET is allowed on document URLs.");
+    return await download(documentUrl);
+  }
+
   const client = await getClient();
   const query = stripUndefined(opts.query);
   const path = normalizePath(opts.path, query);
@@ -45,15 +51,9 @@ export async function request(opts: RequestOptions): Promise<unknown> {
   if (Object.keys(params).length) callOpts.params = params;
   if (opts.body !== undefined) callOpts.body = opts.body;
 
-  const resolvedPath = fillPath(path, pathParams);
-  const binary = opts.method === "GET" && BINARY_PATH.test(resolvedPath);
-  if (binary) callOpts.parseAs = "arrayBuffer";
-
   const caller = client[opts.method] as unknown as Caller;
   try {
-    const { data, response } = await caller(path, callOpts);
-    if (binary)
-      return await saveDownload(resolvedPath, data as ArrayBuffer, response);
+    const { data } = await caller(path, callOpts);
     return data ?? null;
   } catch (err) {
     if (err instanceof JoinError) {
@@ -65,18 +65,28 @@ export async function request(opts: RequestOptions): Promise<unknown> {
   }
 }
 
-async function saveDownload(
-  path: string,
-  data: ArrayBuffer,
-  response: Response,
-): Promise<unknown> {
+/** Returns the URL when `path` is an https URL outside the JOIN API host. */
+export function externalUrl(path: string): URL | undefined {
+  if (!/^https?:\/\//.test(path)) return undefined;
+  const url = new URL(path);
+  const apiHost = new URL(process.env.JOIN_BASE_URL ?? DEFAULT_BASE_URL).host;
+  if (url.host === apiHost) return undefined;
+  if (url.protocol !== "https:")
+    throw new Error("Document URLs must use https.");
+  return url;
+}
+
+async function download(url: URL): Promise<unknown> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(
+      `Download failed with HTTP ${response.status}. Document links expire after one hour; read the application again for a fresh URL.`,
+    );
+  }
   await mkdir(DOWNLOAD_DIR, { recursive: true, mode: 0o700 });
-  const segments = path.split("/");
-  const file = join(
-    DOWNLOAD_DIR,
-    `${segments.at(-2)}-${basename(segments.at(-1)!)}`,
-  );
-  const bytes = Buffer.from(data);
+  const name = basename(decodeURIComponent(url.pathname)) || "document";
+  const file = join(DOWNLOAD_DIR, `${Date.now()}-${name}`);
+  const bytes = Buffer.from(await response.arrayBuffer());
   await writeFile(file, bytes, { mode: 0o600 });
   return {
     savedTo: file,
@@ -86,9 +96,9 @@ async function saveDownload(
 }
 
 /**
- * Accepts what agents tend to pass: a full attachment URL from
- * `application.attachments[].url`, a path with the `/v2` prefix, or a path
- * with a query string. Moves any query string into `query`.
+ * Accepts what agents tend to pass: a full JOIN API URL, a path with the
+ * `/v3` prefix, or a path with a query string. Moves any query string into
+ * `query`.
  */
 export function normalizePath(
   rawPath: string,
@@ -104,7 +114,7 @@ export function normalizePath(
     for (const [k, v] of new URLSearchParams(qs)) query[k] ??= v;
     path = p;
   }
-  path = path.replace(/^\/v2(?=\/)/, "");
+  path = path.replace(/^\/v3(?=\/)/, "");
   return path.startsWith("/") ? path : `/${path}`;
 }
 
@@ -147,11 +157,4 @@ export function extractPathParams(
     delete query[name];
   }
   return pathParams;
-}
-
-function fillPath(path: string, pathParams: Record<string, string>): string {
-  return path.replace(
-    /\{([^}]+)\}/g,
-    (_, name: string) => pathParams[name] ?? "",
-  );
 }
