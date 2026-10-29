@@ -1,6 +1,6 @@
 {
   "name": "join-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Community TypeScript SDK for the JOIN recruiting API",
   "keywords": [
     "join",

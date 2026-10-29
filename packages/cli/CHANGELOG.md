@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/michaeljauk/join-client/compare/join-com-cli-v1.0.0...join-com-cli-v1.0.1) (2026-10-29)
+
+
+### Miscellaneous Chores
+
+* **join-com-cli:** Synchronize join-client versions
+
 ## 1.0.0 (2026-10-29)
 
 

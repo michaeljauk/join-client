@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/michaeljauk/join-client/compare/join-mcp-v1.0.0...join-mcp-v1.0.1) (2026-10-29)
+
+
+### Bug Fixes
+
+* **mcp:** update @cloudflare/codemode to 0.5.5 ([95b9f17](https://github.com/michaeljauk/join-client/commit/95b9f175b0159d336973c4cf8d13aa96ddb453b0))
+
 ## 1.0.0 (2026-10-29)
 
 
