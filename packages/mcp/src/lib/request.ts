@@ -25,8 +25,9 @@ type Caller = (
 
 /**
  * Bridges the `request` function expected by @cloudflare/codemode's
- * openApiMcpServer onto join-sdk. Runs on the host, so the token is injected
- * by the SDK and never reaches agent-authored code.
+ * openApiMcpServer onto join-sdk. The SDK adds the token to each API call, so
+ * agent code does not need it. Agent code runs unsandboxed in this process,
+ * though, and can still read the environment (see README, Security).
  *
  * A GET on a document URL from `application.documents[].url` downloads the
  * file. The URL is pre-signed external storage, so it is fetched without the
@@ -34,7 +35,9 @@ type Caller = (
  * is written to DOWNLOAD_DIR and the result names the local path.
  */
 export async function request(opts: RequestOptions): Promise<unknown> {
-  const documentUrl = externalUrl(opts.path, await getBaseUrl());
+  const documentUrl = /^https?:\/\//.test(opts.path)
+    ? externalUrl(opts.path, await getBaseUrl())
+    : undefined;
   if (documentUrl) {
     if (opts.method !== "GET")
       throw new Error("Only GET is allowed on document URLs.");

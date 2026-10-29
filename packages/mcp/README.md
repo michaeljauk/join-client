@@ -8,7 +8,8 @@ It uses Code Mode from `@cloudflare/codemode`: two tools instead of one per endp
 - `search` runs JavaScript against the OpenAPI spec to find endpoints and fields.
 - `execute` runs JavaScript that calls `codemode.request({ method, path, query, body })`.
 
-The token stays in the server process and never reaches the model.
+The server adds the token to each API call, so agent code never needs it. Agent code can still
+read it from the server process; see Security.
 
 ## Setup
 
