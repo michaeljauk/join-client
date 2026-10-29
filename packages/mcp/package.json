@@ -1,6 +1,6 @@
 {
   "name": "join-mcp",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Model Context Protocol server for the JOIN recruiting API",
   "keywords": [
     "join",
