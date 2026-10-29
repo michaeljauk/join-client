@@ -19,7 +19,7 @@ const pageUrls = [
   ...new Set(
     index.match(/https:\/\/docs\.join\.com\/reference\/[^)\s]+\.md/g) ?? [],
   ),
-].sort();
+].toSorted();
 if (pageUrls.length === 0)
   throw new Error(`no reference pages in ${INDEX_URL}`);
 
@@ -89,6 +89,6 @@ function same(a, b) {
 
 function sortKeys(obj) {
   return Object.fromEntries(
-    Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)),
+    Object.entries(obj).toSorted(([a], [b]) => a.localeCompare(b)),
   );
 }
