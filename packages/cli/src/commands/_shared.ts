@@ -51,13 +51,18 @@ type Caller = (
 ) => Promise<{ data?: unknown; response: Response }>;
 
 /**
- * Calls a list endpoint. With `all`, it walks every page (pageSize 50) and
- * prints one combined array; otherwise it prints the requested page.
+ * Calls a list endpoint. With `all`, it follows `nextCursor` (limit 50) and
+ * returns one combined array; otherwise it returns the `{ data, nextCursor }`
+ * page as is.
  */
 export async function listCall(
   client: JoinClient,
   path: string,
-  params: { path?: Record<string, unknown>; query?: Record<string, unknown> },
+  params: {
+    path?: Record<string, unknown>;
+    query?: Record<string, unknown>;
+    header?: Record<string, unknown>;
+  },
   all: boolean | undefined,
 ): Promise<unknown> {
   const get = client.GET as unknown as Caller;
@@ -65,13 +70,15 @@ export async function listCall(
     const { data } = await get(path as never, { params } as never);
     return data;
   }
-  return collectPages(async (page) => {
-    const query = { ...params.query, page, pageSize: 50 };
+  return collectPages(async (cursor) => {
+    const query = { ...params.query, cursor, limit: 50 };
     const res = await get(
       path as never,
       { params: { ...params, query } } as never,
     );
-    return { data: res.data as unknown[] | undefined, response: res.response };
+    return {
+      data: res.data as { data: unknown[]; nextCursor?: string | null },
+    };
   });
 }
 
@@ -96,7 +103,9 @@ export async function downloadCall(
   consola.success(`Saved ${bytes.length} bytes to ${output}`);
 }
 
+/** Prints nothing for a 204 response, which has no body. */
 export function printJson(value: unknown): void {
+  if (value === undefined) return;
   process.stdout.write(JSON.stringify(value, null, 2) + "\n");
 }
 

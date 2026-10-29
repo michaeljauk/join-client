@@ -14,7 +14,7 @@ import { readStdinText } from "./_shared.js";
 
 async function verifyToken(token: string, baseUrl?: string): Promise<void> {
   const join = createJoinClient({ token, baseUrl });
-  await join.GET("/jobs", { params: { query: { pageSize: 1 } } });
+  await join.GET("/jobs", { params: { query: { limit: 1 } } });
 }
 
 const login = defineCommand({
@@ -43,7 +43,7 @@ const login = defineCommand({
     if (!token && !process.stdin.isTTY) token = await readStdinText();
     if (!token) {
       const answer = await consola.prompt(
-        "API token (https://join.com/user/api-credentials)",
+        "Company API token (JOIN: Company Settings -> Developer -> API tokens)",
         { type: "text", cancel: "null" },
       );
       token = typeof answer === "string" ? answer.trim() : undefined;

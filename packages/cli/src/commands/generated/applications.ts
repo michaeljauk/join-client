@@ -4,7 +4,7 @@ import type { JoinClient } from "join-sdk";
 import { globalArgs, listCall, numOrUndef, printJson, readBody, resolveClient } from "../_shared.js";
 
 const cmd_create = defineCommand({
-  meta: { name: "create", description: "Create application" },
+  meta: { name: "create", description: "Create an application" },
   args: {
     ...globalArgs,
     data: { type: "string", description: "Request body as JSON string, @file.json, or '-' for stdin" },
@@ -16,24 +16,11 @@ const cmd_create = defineCommand({
   },
 });
 
-const cmd_delete = defineCommand({
-  meta: { name: "delete", description: "Delete application" },
-  args: {
-    ...globalArgs,
-    "id": { type: "positional", description: "Id of the application", required: true },
-  },
-  async run({ args }) {
-    const client = await resolveClient(args);
-    const { data } = await (client as JoinClient).DELETE("/applications/{id}" as never, { params: { path: { "id": args["id"] as string } } } as never);
-    printJson(data);
-  },
-});
-
 const cmd_get = defineCommand({
-  meta: { name: "get", description: "Get application" },
+  meta: { name: "get", description: "Get an application" },
   args: {
     ...globalArgs,
-    "id": { type: "positional", description: "Id of the application", required: true },
+    "id": { type: "positional", description: "ID of the application", required: true },
   },
   async run({ args }) {
     const client = await resolveClient(args);
@@ -43,69 +30,53 @@ const cmd_get = defineCommand({
 });
 
 const cmd_list = defineCommand({
-  meta: { name: "list", description: "Get all applications" },
+  meta: { name: "list", description: "List applications" },
   args: {
     ...globalArgs,
-    "page": { type: "string", description: "Used to specify further pages (starts at 1, defaults to 1)" },
-    "page-size": { type: "string", description: "Number of items to include in pagination (up to 50, defaults to 10)" },
-    "created-at-gte": { type: "string", description: "Creation time greater or equal to (accepts date and date-time format)" },
-    "created-at-lt": { type: "string", description: "Creation time lesser than (accepts date and date-time format)" },
-    "updated-at-gte": { type: "string", description: "Update time greater or equal to (accepts date and date-time format)" },
-    "updated-at-lt": { type: "string", description: "Update time lesser than (accepts date and date-time format)" },
-    "country-code": { type: "string", description: "Country code according to [iso-3166-1-alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)" },
-    "job-id": { type: "string", description: "Id of the job" },
-    "job-external-id": { type: "string", description: "External id of the job" },
-    "job-title-like": { type: "string", description: "Title of the job (partial match)" },
-    "has-integration-external-id": { type: "boolean", description: "Whether the application has an integration external id" },
-    "integration-external-id": { type: "string", description: "The external id of the application" },
-    "state": { type: "string", description: "SCREENING and QUALIFIED are deprecated — will be removed on 2026-11-01. Cannot be combined with hiringState or stageType. Migrate to hiringState." },
-    "hiring-state": { type: "string", description: "Filter by canonical hiring state. Cannot be combined with the deprecated state param. Combine with stageType for a precise filter — e.g. hiringState=ACTIVE&stageType=APPLICATION_REVIEW for screening-stage apps, hiringState=ACTIVE&stageType=INTERVIEW for qualified-stage apps." },
-    "stage-type": { type: "string", description: "Filter by pipeline stage type. Cannot be combined with the deprecated state param. Combine with hiringState for a precise filter." },
-    all: { type: "boolean", description: "Fetch every page (pageSize 50) and print one array" },
+    "limit": { type: "string", description: "Number of records to return" },
+    "cursor": { type: "string", description: "Position from the previous response's `nextCursor`. Omit on the first request" },
+    "sort": { type: "string", description: "Order by creation date: `createdAt` for oldest first, the default, or `-createdAt` for newest first. A cursor keeps the order it was read under" },
+    "job-id": { type: "string", description: "Filter by the job applied to" },
+    "candidate-id": { type: "string", description: "Filter by the candidate, using their id within your company" },
+    "status": { type: "string", description: "Filter by hiring status" },
+    "pipeline-stage-type": { type: "string", description: "Filter by the type of the stage the application sits in. An application with no stage matches no value" },
+    "external-id": { type: "string", description: "Filter by your own reference" },
+    "created-after": { type: "string", description: "Only applications created on or after this ISO 8601 timestamp" },
+    "created-before": { type: "string", description: "Only applications created before this ISO 8601 timestamp" },
+    "updated-after": { type: "string", description: "Only applications last changed on or after this ISO 8601 timestamp" },
+    "updated-before": { type: "string", description: "Only applications last changed before this ISO 8601 timestamp" },
+    all: { type: "boolean", description: "Follow nextCursor (limit 50) and print all records as one array" },
   },
   async run({ args }) {
     const client = await resolveClient(args);
-    printJson(await listCall(client as JoinClient, "/applications", { query: { "page": numOrUndef(args["page"]), "pageSize": numOrUndef(args["page-size"]), "createdAtGte": args["created-at-gte"] as string | undefined, "createdAtLt": args["created-at-lt"] as string | undefined, "updatedAtGte": args["updated-at-gte"] as string | undefined, "updatedAtLt": args["updated-at-lt"] as string | undefined, "countryCode": args["country-code"] as string | undefined, "jobId": numOrUndef(args["job-id"]), "jobExternalId": args["job-external-id"] as string | undefined, "jobTitleLike": args["job-title-like"] as string | undefined, "hasIntegrationExternalId": args["has-integration-external-id"] as boolean | undefined, "integrationExternalId": args["integration-external-id"] as string | undefined, "state": args["state"] as string | undefined, "hiringState": args["hiring-state"] as string | undefined, "stageType": args["stage-type"] as string | undefined } }, args.all as boolean | undefined));
+    printJson(await listCall(client as JoinClient, "/applications", { query: { "limit": numOrUndef(args["limit"]), "cursor": args["cursor"] as string | undefined, "sort": args["sort"] as string | undefined, "jobId": numOrUndef(args["job-id"]), "candidateId": numOrUndef(args["candidate-id"]), "status": args["status"] as string | undefined, "pipelineStageType": args["pipeline-stage-type"] as string | undefined, "externalId": args["external-id"] as string | undefined, "createdAfter": args["created-after"] as string | undefined, "createdBefore": args["created-before"] as string | undefined, "updatedAfter": args["updated-after"] as string | undefined, "updatedBefore": args["updated-before"] as string | undefined } }, args.all as boolean | undefined));
   },
 });
 
-const cmd_list_scorecards = defineCommand({
-  meta: { name: "list-scorecards", description: "List application scorecards" },
+const cmd_move_stage = defineCommand({
+  meta: { name: "move-stage", description: "Move an application to a stage" },
   args: {
     ...globalArgs,
-    "id": { type: "positional", description: "Id of the application", required: true },
-  },
-  async run({ args }) {
-    const client = await resolveClient(args);
-    const { data } = await (client as JoinClient).GET("/applications/{id}/scorecards" as never, { params: { path: { "id": args["id"] as string } } } as never);
-    printJson(data);
-  },
-});
-
-const cmd_replace_tags = defineCommand({
-  meta: { name: "replace-tags", description: "Update application tags" },
-  args: {
-    ...globalArgs,
-    "id": { type: "positional", description: "Id of the application", required: true },
+    "id": { type: "positional", description: "ID of the application", required: true },
     data: { type: "string", description: "Request body as JSON string, @file.json, or '-' for stdin" },
   },
   async run({ args }) {
     const client = await resolveClient(args);
-    const { data } = await (client as JoinClient).PUT("/applications/{id}/tags" as never, { params: { path: { "id": args["id"] as string } }, body: (await readBody(args.data as string | undefined)) as never } as never);
+    const { data } = await (client as JoinClient).PUT("/applications/{id}/stage" as never, { params: { path: { "id": args["id"] as string } }, body: (await readBody(args.data as string | undefined)) as never } as never);
     printJson(data);
   },
 });
 
-const cmd_update_external_data = defineCommand({
-  meta: { name: "update-external-data", description: "Update application's integration data" },
+const cmd_update = defineCommand({
+  meta: { name: "update", description: "Update an application’s external reference" },
   args: {
     ...globalArgs,
-    "id": { type: "positional", description: "Id of the application", required: true },
+    "id": { type: "positional", description: "ID of the application", required: true },
     data: { type: "string", description: "Request body as JSON string, @file.json, or '-' for stdin" },
   },
   async run({ args }) {
     const client = await resolveClient(args);
-    const { data } = await (client as JoinClient).PATCH("/applications/{id}/externalData" as never, { params: { path: { "id": args["id"] as string } }, body: (await readBody(args.data as string | undefined)) as never } as never);
+    const { data } = await (client as JoinClient).PATCH("/applications/{id}" as never, { params: { path: { "id": args["id"] as string } }, body: (await readBody(args.data as string | undefined)) as never } as never);
     printJson(data);
   },
 });
@@ -114,11 +85,9 @@ export const applicationsCommand = defineCommand({
   meta: { name: "applications", description: "Manage applications" },
   subCommands: {
     "create": cmd_create,
-    "delete": cmd_delete,
     "get": cmd_get,
     "list": cmd_list,
-    "list-scorecards": cmd_list_scorecards,
-    "replace-tags": cmd_replace_tags,
-    "update-external-data": cmd_update_external_data,
+    "move-stage": cmd_move_stage,
+    "update": cmd_update,
   },
 });

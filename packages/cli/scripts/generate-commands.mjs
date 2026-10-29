@@ -94,9 +94,17 @@ function emitCommand(ep, varName, helpers) {
     );
     queryFlags.push({ raw: q.name, flag, schema: q.schema ?? {} });
   }
+  const headerFlags = [];
+  for (const h of ep.header) {
+    const flag = toKebab(h.name);
+    args.push(
+      `    "${flag}": { type: "string", description: ${str(h.description ?? h.name)} },`,
+    );
+    headerFlags.push({ raw: h.name, flag });
+  }
   if (ep.paginated) {
     args.push(
-      `    all: { type: "boolean", description: "Fetch every page (pageSize 50) and print one array" },`,
+      `    all: { type: "boolean", description: "Follow nextCursor (limit 50) and print all records as one array" },`,
     );
   }
   if (ep.hasBody) {
@@ -124,6 +132,11 @@ function emitCommand(ep, varName, helpers) {
   if (queryFlags.length) {
     parts.push(
       `query: { ${queryFlags.map((q) => `"${q.raw}": ${coerce(q, helpers)}`).join(", ")} }`,
+    );
+  }
+  if (headerFlags.length) {
+    parts.push(
+      `header: { ${headerFlags.map((h) => `"${h.raw}": args["${h.flag}"] as string | undefined`).join(", ")} }`,
     );
   }
   const params = `{ ${parts.join(", ")} }`;

@@ -4,14 +4,14 @@ import type { JoinClient } from "join-sdk";
 import { globalArgs, printJson, resolveClient } from "../_shared.js";
 
 const cmd_list = defineCommand({
-  meta: { name: "list", description: "Get all employment types" },
+  meta: { name: "list", description: "List employment types" },
   args: {
     ...globalArgs,
-    "language": { type: "string", description: "Translate response to specific language, defaults to en" },
+    "accept-language": { type: "string", description: "Preferred language for translated display names. Supported languages are en, de, fr, es, it and nl. Regional variants use their main language (de-CH → de); a list uses the first supported language. If the header is omitted or no language matches, the response uses English. Content-Language identifies the language used. Identifiers, slugs and enum values stay stable. Use languageCode to filter jobs by the language of the ad." },
   },
   async run({ args }) {
     const client = await resolveClient(args);
-    const { data } = await (client as JoinClient).GET("/employmentTypes" as never, { params: { query: { "language": args["language"] as string | undefined } } } as never);
+    const { data } = await (client as JoinClient).GET("/employment-types" as never, { params: { header: { "Accept-Language": args["accept-language"] as string | undefined } } } as never);
     printJson(data);
   },
 });
