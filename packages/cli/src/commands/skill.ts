@@ -3,8 +3,8 @@ import { defineCommand } from "citty";
 import { consola } from "consola";
 import { defaultSkillDir, installSkill } from "../lib/skill.js";
 
-// npm 11.19+ and pnpm do not run the postinstall script by default, so a
-// global install no longer copies the skill. This command does it on demand.
+// npm 12+ and pnpm 10+ block the postinstall script by default, so a global
+// install with them does not copy the skill. This command does it on demand.
 const installCommand = defineCommand({
   meta: {
     name: "install",

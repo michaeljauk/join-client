@@ -72,8 +72,9 @@ Run it again after an update. `--dir <path>` picks another target. If the target
 it is a symlink, for example to a checkout of this repo, the command copies nothing.
 `CLAUDE_CONFIG_DIR` must be an absolute path.
 
-A global install also runs a postinstall script that copies the skill. npm 11.19 and later and pnpm
-skip install scripts by default, so do not rely on it.
+A global install also runs a postinstall script that copies the skill. npm 12 and later and pnpm 10
+and later block install scripts by default, so do not rely on it. npm 11 still runs it, with a
+warning.
 
 ## Exit codes
 

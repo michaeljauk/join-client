@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // On global installs, runs `join-com skill install`, which copies the skill to
 // $CLAUDE_CONFIG_DIR/skills/join/ and never writes through a symlink.
-// npm 11.19+ and pnpm skip install scripts by default; the README says so.
+// npm 12+ and pnpm 10+ block install scripts by default; the README says so.
 // Non-fatal and quiet on failure: it must not break or clutter `npm install`.
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";

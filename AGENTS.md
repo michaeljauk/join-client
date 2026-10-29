@@ -77,7 +77,7 @@ pre-signed URL, fetched without the JOIN token).
 
 `packages/cli/skills/join/SKILL.md` is hand-written. `SCHEMA.md` next to it is generated. `join-com skill
 install` copies both to `$CLAUDE_CONFIG_DIR/skills/join/` (default `~/.claude/skills/join/`). The
-postinstall script does the same on a global install, but npm 11.19+ and pnpm skip it by default.
+postinstall script does the same on a global install, but npm 12+ and pnpm 10+ block it by default.
 
 ## Testing
 
