@@ -56,9 +56,12 @@ console.log(
   `generated ${exported.length} resource command files (${total} endpoints)`,
 );
 
+function varName(cmd) {
+  return "cmd_" + cmd.replace(/-/g, "_");
+}
+
 function emitResourceFile(resource, unsorted) {
   const eps = unsorted.toSorted((a, b) => a.command.localeCompare(b.command));
-  const varName = (cmd) => "cmd_" + cmd.replace(/-/g, "_");
   const helpers = new Set(["globalArgs", "resolveClient"]);
   const body = eps
     .map((ep) => emitCommand(ep, varName(ep.command), helpers))
@@ -77,7 +80,7 @@ function emitResourceFile(resource, unsorted) {
   );
 }
 
-function emitCommand(ep, varName, helpers) {
+function emitCommand(ep, constName, helpers) {
   const args = [`    ...globalArgs,`];
   for (const p of ep.positionals) {
     args.push(
@@ -169,7 +172,7 @@ function emitCommand(ep, varName, helpers) {
   }
 
   return (
-    `const ${varName} = defineCommand({\n` +
+    `const ${constName} = defineCommand({\n` +
     `  meta: { name: "${ep.command}", description: ${str(ep.description)} },\n` +
     `  args: {\n${args.join("\n")}\n  },\n` +
     `  async run({ args }) {\n` +
