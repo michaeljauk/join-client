@@ -70,6 +70,22 @@ describe("installSkill", () => {
     expect(() => installSkill(src, dst)).toThrow(/a missing path/);
   });
 
+  it("refuses a symlinked file inside the target", () => {
+    const outside = join(root, "checkout-SKILL.md");
+    writeFileSync(outside, "checkout copy");
+    const dst = join(root, "dst");
+    mkdirSync(dst);
+    symlinkSync(outside, join(dst, "SKILL.md"));
+    expect(() => installSkill(src, dst)).toThrow(/SKILL.md is a symlink to/);
+    expect(readFileSync(outside, "utf8")).toBe("checkout copy");
+  });
+
+  it("refuses a target that is a regular file", () => {
+    const dst = join(root, "file");
+    writeFileSync(dst, "");
+    expect(() => installSkill(src, dst)).toThrow(/not a directory/);
+  });
+
   it("skips SCHEMA.md when the package has none", () => {
     rmSync(join(src, "SCHEMA.md"));
     const result = installSkill(src, join(root, "dst"));
@@ -86,6 +102,11 @@ describe("defaultSkillDir", () => {
   it("uses CLAUDE_CONFIG_DIR when set", () => {
     vi.stubEnv("CLAUDE_CONFIG_DIR", "/tmp/claude-x");
     expect(defaultSkillDir("join")).toBe("/tmp/claude-x/skills/join");
+  });
+
+  it("rejects a relative CLAUDE_CONFIG_DIR", () => {
+    vi.stubEnv("CLAUDE_CONFIG_DIR", ".claude-x");
+    expect(() => defaultSkillDir("join")).toThrow(/absolute path/);
   });
 
   it("falls back to ~/.claude", () => {
